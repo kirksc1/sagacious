@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+}
+
+subprojects {
+
+    group 'com.github.kirksc1.sagacious'
+    version '0.0.1-SNAPSHOT'
+
+    sourceCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+allprojects {
+    wrapper {
+        version = "5.0"
+    }
+}
+
+
+
+

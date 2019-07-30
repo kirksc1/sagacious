@@ -1,0 +1,4 @@
+rootProject.name = 'sagacious'
+include 'sagacious-api'
+include 'sagacious-sample'
+
