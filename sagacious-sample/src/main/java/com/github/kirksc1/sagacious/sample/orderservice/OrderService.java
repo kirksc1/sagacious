@@ -1,13 +1,10 @@
 package com.github.kirksc1.sagacious.sample.orderservice;
 
-import com.github.kirksc1.sagacious.*;
-import com.github.kirksc1.sagacious.sample.orderservice.payments.Payment;
 import com.github.kirksc1.sagacious.sample.orderservice.payments.PaymentServiceClient;
 import com.github.kirksc1.sagacious.sample.orderservice.shipments.ShipmentItem;
 import com.github.kirksc1.sagacious.sample.orderservice.shipments.ShipmentServiceClient;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,15 +25,8 @@ public class OrderService {
     @NonNull
     private OrderRepository repository;
 
-    @NonNull
-    private SagaManager sagaManager;
-
-    @NonNull
-    private Environment environment;
-
     @Transactional
     public Order createOrder(Order order) throws Exception {
-        SagaIdentifier sagaId = SagaContextHolder.getSagaContext().getIdentifier();
 
         order.setGuid(UUID.randomUUID().toString());
         order.setStatus("Pending");
@@ -51,7 +41,7 @@ public class OrderService {
 
             if (paymentId != null) {
                 //successful payment
-                String shipmentId = shipmentServiceClient.initiateShipment(order.getShippingDestinationId(), convert(order.getItems()));
+                shipmentServiceClient.initiateShipment(order.getShippingDestinationId(), convert(order.getItems()));
             }
 
             //JUST TO SIMULATE FAILURES IN TESTS
