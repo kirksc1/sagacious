@@ -23,7 +23,6 @@ public class PaymentServiceClient {
     @NonNull
     private Environment environment;
 
-    //@SagaParticipant(actionDefinitionFactoryBean="paymentActionDefinitionFactory", participantRegistrarBean="localRegistrar", failOnException=false)
     @SagaParticipant(actionDefinitionFactory="paymentActionDefinitionFactory")
     public String initiatePayment(String paymentDeviceId, Float amount) throws FailedPaymentException {
         Payment payment = new Payment();

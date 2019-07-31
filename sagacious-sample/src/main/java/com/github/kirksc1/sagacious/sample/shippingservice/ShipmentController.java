@@ -1,9 +1,5 @@
 package com.github.kirksc1.sagacious.sample.shippingservice;
 
-import com.github.kirksc1.sagacious.sample.paymentservice.Payment;
-import com.github.kirksc1.sagacious.sample.paymentservice.PaymentAssembler;
-import com.github.kirksc1.sagacious.sample.paymentservice.PaymentResource;
-import com.github.kirksc1.sagacious.sample.paymentservice.PaymentService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

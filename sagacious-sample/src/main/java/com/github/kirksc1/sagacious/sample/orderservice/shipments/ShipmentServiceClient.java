@@ -24,7 +24,6 @@ public class ShipmentServiceClient {
     @NonNull
     private Environment environment;
 
-    //@SagaParticipant(actionDefinitionFactoryBean="shipmentActionDefinitionFactory", participantRegistrarBean="localRegistrar", failOnException=false)
     @SagaParticipant(actionDefinitionFactory="shipmentActionDefinitionFactory")
     public String initiateShipment(String destinationId, List<ShipmentItem> items) throws FailedShipmentException {
         Shipment shipment = new Shipment();

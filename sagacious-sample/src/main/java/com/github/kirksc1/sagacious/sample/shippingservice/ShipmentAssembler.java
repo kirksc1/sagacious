@@ -1,7 +1,5 @@
 package com.github.kirksc1.sagacious.sample.shippingservice;
 
-import com.github.kirksc1.sagacious.sample.orderservice.OrderItem;
-import com.github.kirksc1.sagacious.sample.orderservice.OrderItemResource;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
