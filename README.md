@@ -19,7 +19,7 @@ public String createOrder(@RequestBody OrderResource orderResource) throws Excep
     //clever business logic
 }
 ```
-Reference: [OrderController.java](src/main/java/com/github/kirksc1/sagacious/sample/orderservice/OrderController.java)
+Reference: [OrderController.java](sagacious-sample/src/main/java/com/github/kirksc1/sagacious/sample/orderservice/OrderController.java)
 
 ### Participant Registration
 Register a saga participant, and its compensating action, with the current saga, if present. 
@@ -31,5 +31,5 @@ public String initiatePayment(String paymentDeviceId, Float amount) throws Faile
     //more clever business logic
 }
 ```
-Reference: [PaymentServiceClient.java](src/main/java/com/github/kirksc1/sagacious/sample/orderservice/payments/PaymentServiceClient.java)
+Reference: [PaymentServiceClient.java](sagacious-sample/src/main/java/com/github/kirksc1/sagacious/sample/orderservice/payments/PaymentServiceClient.java)
  
