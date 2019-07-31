@@ -25,20 +25,23 @@ public class SagaParticipantAspect {
     public Object addParticipant(ProceedingJoinPoint joinPoint) throws Throwable {
         Object retVal = joinPoint.proceed();
 
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
+        SagaContext sagaContext = SagaContextHolder.getSagaContext();
+        if (sagaContext != null) {
+            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+            Method method = signature.getMethod();
 
-        SagaParticipant sagaParticipant = method.getAnnotation(SagaParticipant.class);
-        Object factoryBeanObj = context.getBean(sagaParticipant.actionDefinitionFactory());
-        if (factoryBeanObj instanceof CompensatingActionDefinitionFactory) {
-            CompensatingActionDefinitionFactory factory = (CompensatingActionDefinitionFactory) factoryBeanObj;
-            CompensatingActionDefinition definition = factory.buildDefinition(retVal);
+            SagaParticipant sagaParticipant = method.getAnnotation(SagaParticipant.class);
+            Object factoryBeanObj = context.getBean(sagaParticipant.actionDefinitionFactory());
+            if (factoryBeanObj instanceof CompensatingActionDefinitionFactory) {
+                CompensatingActionDefinitionFactory factory = (CompensatingActionDefinitionFactory) factoryBeanObj;
+                CompensatingActionDefinition definition = factory.buildDefinition(retVal);
 
-            ParticipantIdentifier participantIdentifier = new ParticipantIdentifier(UUID.randomUUID().toString());
+                ParticipantIdentifier participantIdentifier = new ParticipantIdentifier(UUID.randomUUID().toString());
 
-            sagaManager.addParticipant(SagaContextHolder.getSagaContext().getIdentifier(), participantIdentifier, definition);
-        } else {
-            throw new IllegalStateException("The actionDefinitionFactory bean defined is not of type CompensatingActionDefinitionFactory");
+                sagaManager.addParticipant(sagaContext.getIdentifier(), participantIdentifier, definition);
+            } else {
+                throw new IllegalStateException("The actionDefinitionFactory bean defined is not of type CompensatingActionDefinitionFactory");
+            }
         }
 
         return retVal;
