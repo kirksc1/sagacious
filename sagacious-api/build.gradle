@@ -13,4 +13,6 @@ dependencies {
     testCompile("com.h2database:h2:1.4.199")
     testCompile("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
     testCompile group: 'junit', name: 'junit', version: '4.12'
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.4")
+    testCompileOnly("org.projectlombok:lombok:1.18.4")
 }

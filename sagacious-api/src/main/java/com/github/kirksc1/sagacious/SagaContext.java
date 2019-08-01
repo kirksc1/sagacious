@@ -1,10 +1,16 @@
 package com.github.kirksc1.sagacious;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
 
-@Data
+@AllArgsConstructor
+@Getter
 public class SagaContext {
 
+    @NonNull
+    private SagaManager sagaManager;
+    @NonNull
     private SagaIdentifier identifier;
 
 }
