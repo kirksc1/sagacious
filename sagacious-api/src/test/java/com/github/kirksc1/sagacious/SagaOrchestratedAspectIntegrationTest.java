@@ -1,7 +1,7 @@
 package com.github.kirksc1.sagacious;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,6 +26,14 @@ public class SagaOrchestratedAspectIntegrationTest {
     TestSagaManager testSagaManager;
 
     @Autowired
+    @Qualifier("sagaIdentifierFactory")
+    TestIdentifierFactory identifierFactory;
+
+    @Autowired
+    @Qualifier("testIdentifierFactory")
+    TestIdentifierFactory testIdentifierFactory;
+
+    @Autowired
     Orchestrator orchestrator;
 
     @org.springframework.boot.test.context.TestConfiguration
@@ -45,7 +53,7 @@ public class SagaOrchestratedAspectIntegrationTest {
             return new CompensatingActionDefinitionFactory<String>() {
                 @Override
                 public CompensatingActionDefinition buildDefinition(String item) {
-                    return null;
+                    return new CompensatingActionDefinition();
                 }
             };
         }
@@ -59,6 +67,16 @@ public class SagaOrchestratedAspectIntegrationTest {
         public Participant participant() {
             return new Participant();
         }
+
+        @Bean
+        public TestIdentifierFactory sagaIdentifierFactory() {
+            return new TestIdentifierFactory();
+        }
+
+        @Bean
+        public TestIdentifierFactory testIdentifierFactory() {
+            return new TestIdentifierFactory();
+        }
     }
 
     @AllArgsConstructor
@@ -67,12 +85,22 @@ public class SagaOrchestratedAspectIntegrationTest {
         private Participant participant;
 
         @SagaOrchestrated
-        public void orchestrate() {
+        public void overriddenSagaManagerOrchestrate() {
             participant.participate();
         }
 
         @SagaOrchestrated(sagaManager = "testSagaManager")
-        public void customizedOrchestrate() {
+        public void customizedSagaManagerOrchestrate() {
+            participant.participate();
+        }
+
+        @SagaOrchestrated
+        public void overriddenIdentifierFactoryOrchestrate() {
+            participant.participate();
+        }
+
+        @SagaOrchestrated(identifierFactory = "testIdentifierFactory")
+        public void customizedIdentifierFactoryOrchestrate() {
             participant.participate();
         }
     }
@@ -84,7 +112,22 @@ public class SagaOrchestratedAspectIntegrationTest {
         }
     }
 
-    @Data
+    @Getter
+    static class TestIdentifierFactory implements IdentifierFactory {
+        private boolean buildCalled = false;
+
+        @Override
+        public String buildIdentifier() {
+            buildCalled = true;
+            return "";
+        }
+
+        public void reset() {
+            buildCalled = false;
+        }
+    }
+
+    @Getter
     static class TestSagaManager implements SagaManager {
         private boolean createCalled = false;
         private boolean addParticipantCalled = false;
@@ -134,11 +177,14 @@ public class SagaOrchestratedAspectIntegrationTest {
     public void after() {
         sagaManager.reset();
         testSagaManager.reset();
+
+        identifierFactory.reset();
+        testIdentifierFactory.reset();
     }
 
     @Test
     public void testOverriddenSagaManagerBean() {
-        orchestrator.orchestrate();
+        orchestrator.overriddenSagaManagerOrchestrate();
 
         assertEquals(true, sagaManager.createCalled);
         assertEquals(true, sagaManager.addParticipantCalled);
@@ -148,13 +194,31 @@ public class SagaOrchestratedAspectIntegrationTest {
     }
 
     @Test
-    public void testCustomSagaManagerBean() {
-        orchestrator.customizedOrchestrate();
+    public void testCustomizedSagaManagerBean() {
+        orchestrator.customizedSagaManagerOrchestrate();
 
         assertEquals(true, testSagaManager.createCalled);
         assertEquals(true, testSagaManager.addParticipantCalled);
         assertEquals(true, testSagaManager.completeCalled);
 
         assertEquals(false, sagaManager.createCalled);
+    }
+
+    @Test
+    public void testOverriddenIdentifierFactoryBean() {
+        orchestrator.overriddenIdentifierFactoryOrchestrate();
+
+        assertEquals(true, identifierFactory.buildCalled);
+
+        assertEquals(false, testIdentifierFactory.buildCalled);
+    }
+
+    @Test
+    public void testCustomizedIdentifierFactoryBean() {
+        orchestrator.customizedIdentifierFactoryOrchestrate();
+
+        assertEquals(true, testIdentifierFactory.buildCalled);
+
+        assertEquals(false, identifierFactory.buildCalled);
     }
 }

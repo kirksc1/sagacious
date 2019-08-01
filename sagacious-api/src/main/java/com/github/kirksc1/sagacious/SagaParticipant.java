@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SagaParticipant {
     public String actionDefinitionFactory();
+    public String identifierFactory() default "participantIdentifierFactory";
 }

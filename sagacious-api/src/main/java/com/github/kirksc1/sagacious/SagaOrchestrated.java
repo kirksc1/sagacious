@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SagaOrchestrated {
     public String sagaManager() default "sagaManager";
+    public String identifierFactory() default "sagaIdentifierFactory";
 }
