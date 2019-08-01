@@ -2,6 +2,7 @@ package com.github.kirksc1.sagacious;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kirksc1.sagacious.executor.RestTemplateExecutor;
+import com.github.kirksc1.sagacious.identifier.UuidFactory;
 import com.github.kirksc1.sagacious.strategy.SynchronousParticipantOrderStrategy;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
@@ -43,5 +44,17 @@ public class SagaciousAutoConfiguration {
     @ConditionalOnMissingBean
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "sagaIdentifierFactory")
+    public IdentifierFactory sagaIdentifierFactory() {
+        return new UuidFactory();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "participantIdentifierFactory")
+    public IdentifierFactory participantIdentifierFactory() {
+        return new UuidFactory();
     }
 }

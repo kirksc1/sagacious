@@ -9,7 +9,6 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Method;
-import java.util.UUID;
 
 @Aspect
 @RequiredArgsConstructor
@@ -33,7 +32,8 @@ public class SagaParticipantAspect {
                 CompensatingActionDefinitionFactory factory = (CompensatingActionDefinitionFactory) factoryBeanObj;
                 CompensatingActionDefinition definition = factory.buildDefinition(retVal);
 
-                ParticipantIdentifier participantIdentifier = new ParticipantIdentifier(UUID.randomUUID().toString());
+                IdentifierFactory identifierFactory = context.getBean(sagaParticipant.identifierFactory(), IdentifierFactory.class);
+                ParticipantIdentifier participantIdentifier = new ParticipantIdentifier(identifierFactory.buildIdentifier());
 
                 sagaContext.getSagaManager().addParticipant(sagaContext.getIdentifier(), participantIdentifier, definition);
             } else {
