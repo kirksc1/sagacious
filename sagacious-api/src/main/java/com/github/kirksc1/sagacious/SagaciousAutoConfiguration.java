@@ -14,16 +14,17 @@ import org.springframework.web.client.RestTemplate;
 public class SagaciousAutoConfiguration {
 
     @Bean
-    public SagaOrchestratedAspect sagaOrchestratorAspect(SagaManager sagaManager) {
-        return new SagaOrchestratedAspect(sagaManager);
+    public SagaOrchestratedAspect sagaOrchestratorAspect(ApplicationContext context) {
+        return new SagaOrchestratedAspect(context);
     }
 
     @Bean
-    public SagaParticipantAspect sagaParticipantAspect(SagaManager sagaManager, ApplicationContext context) {
-        return new SagaParticipantAspect(sagaManager, context);
+    public SagaParticipantAspect sagaParticipantAspect(ApplicationContext context) {
+        return new SagaParticipantAspect(context);
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "sagaManager")
     public SagaManager sagaManager(CrudRepository<Saga, String> repository, CompensatingActionStrategy compensatingActionStrategy, ObjectMapper objectMapper) {
         return new SimpleSagaManager(repository, compensatingActionStrategy, objectMapper);
     }

@@ -16,9 +16,6 @@ import java.util.UUID;
 public class SagaParticipantAspect {
 
     @NonNull
-    private SagaManager sagaManager;
-
-    @NonNull
     private ApplicationContext context;
 
     @Around("@annotation(com.github.kirksc1.sagacious.SagaParticipant)")
@@ -38,7 +35,7 @@ public class SagaParticipantAspect {
 
                 ParticipantIdentifier participantIdentifier = new ParticipantIdentifier(UUID.randomUUID().toString());
 
-                sagaManager.addParticipant(sagaContext.getIdentifier(), participantIdentifier, definition);
+                sagaContext.getSagaManager().addParticipant(sagaContext.getIdentifier(), participantIdentifier, definition);
             } else {
                 throw new IllegalStateException("The actionDefinitionFactory bean defined is not of type CompensatingActionDefinitionFactory");
             }
