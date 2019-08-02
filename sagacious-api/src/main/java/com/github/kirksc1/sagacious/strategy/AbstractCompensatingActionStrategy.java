@@ -1,10 +1,7 @@
 package com.github.kirksc1.sagacious.strategy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.kirksc1.sagacious.CompensatingActionDefinition;
-import com.github.kirksc1.sagacious.CompensatingActionExecutor;
-import com.github.kirksc1.sagacious.CompensatingActionStrategy;
-import com.github.kirksc1.sagacious.Saga;
+import com.github.kirksc1.sagacious.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.CrudRepository;
@@ -21,7 +18,7 @@ public abstract class AbstractCompensatingActionStrategy implements Compensating
     private final CrudRepository<Saga, String> repository;
 
     @NonNull
-    private final CompensatingActionExecutor executor;
+    private final CompensatingActionManager manager;
 
     @NonNull
     private final ObjectMapper objectMapper;
@@ -42,7 +39,7 @@ public abstract class AbstractCompensatingActionStrategy implements Compensating
     }
 
     protected boolean performCompensatingAction(CompensatingActionDefinition compensatingActionDefinition) {
-        return executor.execute(compensatingActionDefinition);
+        return manager.execute(compensatingActionDefinition);
     }
 
     protected CompensatingActionDefinition convert(String str) {
