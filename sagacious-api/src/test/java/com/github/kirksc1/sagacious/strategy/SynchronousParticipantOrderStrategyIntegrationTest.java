@@ -1,10 +1,7 @@
 package com.github.kirksc1.sagacious.strategy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.kirksc1.sagacious.CompensatingActionDefinition;
-import com.github.kirksc1.sagacious.CompensatingActionExecutor;
-import com.github.kirksc1.sagacious.CompensatingActionStrategy;
-import com.github.kirksc1.sagacious.Saga;
+import com.github.kirksc1.sagacious.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,8 +41,8 @@ public class SynchronousParticipantOrderStrategyIntegrationTest {
     static class TestConfig {
 
         @Bean
-        public CompensatingActionStrategy compensatingActionStrategy(CrudRepository<Saga, String> repository, CompensatingActionExecutor executor, ObjectMapper objectMapper) {
-            return new SynchronousParticipantOrderStrategy(repository, executor, objectMapper);
+        public CompensatingActionStrategy compensatingActionStrategy(CrudRepository<Saga, String> repository, CompensatingActionManager manager, ObjectMapper objectMapper) {
+            return new SynchronousParticipantOrderStrategy(repository, manager, objectMapper);
         }
 
         @Bean
@@ -54,11 +51,17 @@ public class SynchronousParticipantOrderStrategyIntegrationTest {
         }
 
         @Bean
+        public CompensatingActionManager compensatingActionManager(List<CompensatingActionExecutor> executorList) {
+            return new CompensatingActionManager(new SimpleCompensatingActionDefinitionMatcher(), executorList);
+        }
+
+        @Bean
         public ObjectMapper objectMapper() {
             return new ObjectMapper();
         }
     }
 
+    @Executable
     static class TestCompensatingActionExecutor implements CompensatingActionExecutor {
 
         private final List<String> uris = new ArrayList<>();

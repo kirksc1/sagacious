@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
+
 @Configuration
 public class SagaciousAutoConfiguration {
 
@@ -31,13 +33,25 @@ public class SagaciousAutoConfiguration {
     }
 
     @Bean
-    public CompensatingActionStrategy compensatingActionStrategy(CrudRepository<Saga, String> repository, CompensatingActionExecutor executor, ObjectMapper objectMapper) {
-        return new SynchronousParticipantOrderStrategy(repository, executor, objectMapper);
+    public CompensatingActionStrategy compensatingActionStrategy(CrudRepository<Saga, String> repository, CompensatingActionManager manager, ObjectMapper objectMapper) {
+        return new SynchronousParticipantOrderStrategy(repository, manager, objectMapper);
     }
 
     @Bean
     public CompensatingActionExecutor compensatingActionExecutor(RestTemplate restTemplate) {
         return new RestTemplateExecutor(restTemplate);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CompensatingActionDefinitionMatcher compensatingActionDefinitionMatcher() {
+        return new SimpleCompensatingActionDefinitionMatcher();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CompensatingActionManager compensatingActionManager(CompensatingActionDefinitionMatcher matcher, List<CompensatingActionExecutor> executors) {
+        return new CompensatingActionManager(matcher, executors);
     }
 
     @Bean

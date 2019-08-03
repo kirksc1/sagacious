@@ -1,7 +1,7 @@
 package com.github.kirksc1.sagacious.strategy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.kirksc1.sagacious.CompensatingActionExecutor;
+import com.github.kirksc1.sagacious.CompensatingActionManager;
 import com.github.kirksc1.sagacious.Participant;
 import com.github.kirksc1.sagacious.Saga;
 import org.springframework.data.repository.CrudRepository;
@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 public class SynchronousParticipantOrderStrategy extends AbstractCompensatingActionStrategy {
 
-    public SynchronousParticipantOrderStrategy(CrudRepository<Saga, String> repository, CompensatingActionExecutor executor, ObjectMapper objectMapper) {
-        super(repository, executor, objectMapper);
+    public SynchronousParticipantOrderStrategy(CrudRepository<Saga, String> repository, CompensatingActionManager manager, ObjectMapper objectMapper) {
+        super(repository, manager, objectMapper);
     }
 
     @Override

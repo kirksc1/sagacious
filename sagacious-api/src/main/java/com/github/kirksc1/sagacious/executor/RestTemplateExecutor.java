@@ -1,5 +1,6 @@
 package com.github.kirksc1.sagacious.executor;
 
+import com.github.kirksc1.sagacious.Executable;
 import com.github.kirksc1.sagacious.CompensatingActionDefinition;
 import com.github.kirksc1.sagacious.CompensatingActionExecutor;
 import lombok.NonNull;
@@ -16,6 +17,8 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
+@Executable(scheme="http")
+@Executable(scheme="https")
 public class RestTemplateExecutor implements CompensatingActionExecutor {
 
     @NonNull

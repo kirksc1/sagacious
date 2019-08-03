@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
 import java.util.Optional;
 
 import static junit.framework.TestCase.assertTrue;
@@ -45,8 +46,8 @@ public class SimpleSagaManagerIntegrationTest {
         }
 
         @Bean
-        public CompensatingActionStrategy compensatingActionStrategy(CrudRepository<Saga, String> repository, CompensatingActionExecutor executor, ObjectMapper objectMapper) {
-            return new SynchronousParticipantOrderStrategy(repository, executor, objectMapper);
+        public CompensatingActionStrategy compensatingActionStrategy(CrudRepository<Saga, String> repository, CompensatingActionManager manager, ObjectMapper objectMapper) {
+            return new SynchronousParticipantOrderStrategy(repository, manager, objectMapper);
         }
 
         @Bean
@@ -55,11 +56,17 @@ public class SimpleSagaManagerIntegrationTest {
         }
 
         @Bean
+        public CompensatingActionManager compensatingActionManager(List<CompensatingActionExecutor> executorList) {
+            return new CompensatingActionManager(new SimpleCompensatingActionDefinitionMatcher(), executorList);
+        }
+
+        @Bean
         public ObjectMapper objectMapper() {
             return new ObjectMapper();
         }
     }
 
+    @Executable
     static class AlternatingFailureExecutor implements CompensatingActionExecutor {
         private boolean fail = false;
         @Override
