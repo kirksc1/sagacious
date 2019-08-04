@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 dependencies {
@@ -16,3 +17,12 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok:1.18.4")
     testCompileOnly("org.projectlombok:lombok:1.18.4")
 }
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
+    }
+}
+
+check.dependsOn jacocoTestReport
