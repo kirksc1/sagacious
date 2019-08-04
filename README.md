@@ -1,4 +1,6 @@
 # Sagacious
+[![Build Status](https://travis-ci.org/kirksc1/sagacious.svg?branch=master)](https://travis-ci.org/kirksc1/sagacious)
+[![codecov](https://codecov.io/gh/kirksc1/sagacious/branch/master/graph/badge.svg)](https://codecov.io/gh/kirksc1/sagacious)
 ## Purpose
 Sagacious is an effort to provide a framework for implementing the saga design pattern in a 
 non-invasive manner.  Its primary focus is on simplifying the orchestration style of sagas.  
