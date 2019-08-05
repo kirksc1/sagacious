@@ -69,8 +69,10 @@ public class SimpleSagaManagerIntegrationTest {
     @Executable
     static class AlternatingFailureExecutor implements CompensatingActionExecutor {
         private boolean fail = false;
+        private int calledCount = 0;
         @Override
         public boolean execute(CompensatingActionDefinition definition) {
+            calledCount++;
             fail = !fail;
             System.out.println("CompensatingAction success=" + fail);
             return fail;
@@ -78,6 +80,11 @@ public class SimpleSagaManagerIntegrationTest {
 
         public void reset() {
             fail = false;
+            calledCount = 0;
+        }
+
+        public int getCalledCount() {
+            return calledCount;
         }
     }
 
@@ -116,6 +123,60 @@ public class SimpleSagaManagerIntegrationTest {
         assertEquals(Boolean.FALSE, participant.getFailCompleted());
         assertEquals(1, participant.getOrderIndex().intValue());
         assertEquals("{\"attributes\":[],\"headers\":[]}", participant.getActionDefinition());
+    }
+
+    @Test
+    public void testAddParticipant_whenDetailsProvidedAndSagaCompleted_thenParticipantAdded() {
+        CompensatingActionDefinition definition = new CompensatingActionDefinition();
+        boolean retVal = sagaManager.addParticipant(new SagaIdentifier("completed"), new ParticipantIdentifier("test"), definition);
+
+        assertEquals(true, retVal);
+
+        Optional<Saga> sagaOpt = sagaRepository.findById("completed");
+
+        assertTrue(sagaOpt.isPresent());
+
+        Saga saga = sagaOpt.get();
+        assertEquals(2, saga.getParticipants().size());
+
+        Participant participant = saga.getParticipants().get(1);
+        assertEquals("test", participant.getIdentifier());
+        assertEquals(false, participant.getFailCompleted());
+    }
+
+    @Test
+    public void testAddParticipant_whenDetailsProvidedAndSagaCompleted_thenActionNotExeuted() {
+        CompensatingActionDefinition definition = new CompensatingActionDefinition();
+        boolean retVal = sagaManager.addParticipant(new SagaIdentifier("completed"), new ParticipantIdentifier("test"), definition);
+
+        assertEquals(0, executor.getCalledCount());
+    }
+
+    @Test
+    public void testAddParticipant_whenDetailsProvidedAndSagaFailed_thenParticipantAdded() {
+        CompensatingActionDefinition definition = new CompensatingActionDefinition();
+        boolean retVal = sagaManager.addParticipant(new SagaIdentifier("failed"), new ParticipantIdentifier("test"), definition);
+
+        assertEquals(false, retVal);
+
+        Optional<Saga> sagaOpt = sagaRepository.findById("failed");
+
+        assertTrue(sagaOpt.isPresent());
+
+        Saga saga = sagaOpt.get();
+        assertEquals(2, saga.getParticipants().size());
+
+        Participant participant = saga.getParticipants().get(1);
+        assertEquals("test", participant.getIdentifier());
+        assertEquals(true, participant.getFailCompleted());
+    }
+
+    @Test
+    public void testAddParticipant_whenDetailsProvidedAndSagaFailed_thenActionExecuted() {
+        CompensatingActionDefinition definition = new CompensatingActionDefinition();
+        boolean retVal = sagaManager.addParticipant(new SagaIdentifier("failed"), new ParticipantIdentifier("test"), definition);
+
+        assertEquals(1, executor.getCalledCount());
     }
 
     @Test

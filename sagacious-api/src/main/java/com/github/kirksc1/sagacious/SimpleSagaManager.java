@@ -73,6 +73,14 @@ public class SimpleSagaManager implements SagaManager {
         }
 
         return repository.findById(sagaIdentifier.toString()).map(saga -> {
+            if (saga.isFailed()) {
+                compensatingActionStrategy.performCompensatingActions(saga);
+
+                if (!saga.isCompleted()) {
+                    flagSagaForFailureCompletedIfAllParticipantsCompleted(sagaIdentifier.toString());
+                }
+            }
+
             Participant participant = new Participant();
             participant.setIdentifier(participantIdentifier.toString());
             participant.setActionDefinition(compensatingActionStr);
