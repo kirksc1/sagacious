@@ -2,6 +2,9 @@ package com.github.kirksc1.sagacious;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
@@ -35,6 +39,14 @@ public class SagaOrchestratedAspectIntegrationTest {
 
     @Autowired
     Orchestrator orchestrator;
+
+    @Autowired
+    @Qualifier("earlyTestAspect")
+    EarlyTestAspect earlyTestAspect;
+
+    @Autowired
+    @Qualifier("lateTestAspect")
+    LateTestAspect lateTestAspect;
 
     @org.springframework.boot.test.context.TestConfiguration
     static class TestConfiguration {
@@ -77,6 +89,16 @@ public class SagaOrchestratedAspectIntegrationTest {
         public TestIdentifierFactory testIdentifierFactory() {
             return new TestIdentifierFactory();
         }
+
+        @Bean
+        public EarlyTestAspect earlyTestAspect() {
+            return new EarlyTestAspect();
+        }
+
+        @Bean
+        public LateTestAspect lateTestAspect() {
+            return new LateTestAspect();
+        }
     }
 
     @AllArgsConstructor
@@ -101,6 +123,11 @@ public class SagaOrchestratedAspectIntegrationTest {
 
         @SagaOrchestrated(identifierFactory = "testIdentifierFactory")
         public void customizedIdentifierFactoryOrchestrate() {
+            participant.participate();
+        }
+
+        @SagaOrchestrated(identifierFactory = "testIdentifierFactory")
+        public void orderedIdentifierFactoryOrchestrate() {
             participant.participate();
         }
     }
@@ -173,6 +200,42 @@ public class SagaOrchestratedAspectIntegrationTest {
         }
     }
 
+    @Aspect
+    @Getter
+    @Order(-1)
+    public static class EarlyTestAspect {
+
+        private boolean contextSet = false;
+
+        @Around("@annotation(com.github.kirksc1.sagacious.SagaOrchestrated)")
+        public Object doWork(ProceedingJoinPoint joinPoint) throws Throwable {
+            contextSet = SagaContextHolder.getSagaContext() != null;
+            return joinPoint.proceed(joinPoint.getArgs());
+        }
+
+        public void reset() {
+            contextSet = false;
+        }
+    }
+
+    @Aspect
+    @Getter
+    @Order(1)
+    public static class LateTestAspect {
+
+        private boolean contextSet = false;
+
+        @Around("@annotation(com.github.kirksc1.sagacious.SagaOrchestrated)")
+        public Object doWork(ProceedingJoinPoint joinPoint) throws Throwable {
+            contextSet = SagaContextHolder.getSagaContext() != null;
+            return joinPoint.proceed(joinPoint.getArgs());
+        }
+
+        public void reset() {
+            contextSet = false;
+        }
+    }
+
     @After
     public void after() {
         sagaManager.reset();
@@ -180,6 +243,9 @@ public class SagaOrchestratedAspectIntegrationTest {
 
         identifierFactory.reset();
         testIdentifierFactory.reset();
+
+        earlyTestAspect.reset();
+        lateTestAspect.reset();
     }
 
     @Test
@@ -220,5 +286,19 @@ public class SagaOrchestratedAspectIntegrationTest {
         assertEquals(true, testIdentifierFactory.buildCalled);
 
         assertEquals(false, identifierFactory.buildCalled);
+    }
+
+    @Test
+    public void testOrdered_whenSecondAspectOrderedLower_thenSecondAspectExecutedFirst() {
+        orchestrator.orderedIdentifierFactoryOrchestrate();
+
+        assertEquals(false, earlyTestAspect.isContextSet());
+    }
+
+    @Test
+    public void testOrdered_whenSecondAspectOrderedHigher_thenSecondAspectExecutedLast() {
+        orchestrator.orderedIdentifierFactoryOrchestrate();
+
+        assertEquals(true, lateTestAspect.isContextSet());
     }
 }
