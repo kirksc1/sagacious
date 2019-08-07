@@ -7,15 +7,23 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
 
 @Aspect
 @RequiredArgsConstructor
-public class SagaOrchestratedAspect {
+public class SagaOrchestratedAspect implements Ordered {
+
+    public static final int DEFAULT_ORDER = 0;
 
     @NonNull
     private final ApplicationContext context;
+    private final int order;
+
+    public SagaOrchestratedAspect(ApplicationContext context) {
+        this(context, DEFAULT_ORDER);
+    }
 
     @Around("@annotation(com.github.kirksc1.sagacious.SagaOrchestrated)")
     public Object applySaga(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -30,15 +38,23 @@ public class SagaOrchestratedAspect {
         sagaManager.createSaga(sagaId);
 
         SagaContext sagaContext = new SagaContext(sagaManager, sagaId);
-        SagaContextHolder.setSagaContext(sagaContext);
 
         try {
+            SagaContextHolder.setSagaContext(sagaContext);
+
             Object retVal = joinPoint.proceed();
             sagaManager.completeSaga(sagaId);
             return retVal;
         } catch (Exception e) {
             sagaManager.failSaga(sagaId);
             throw e;
+        } finally {
+            SagaContextHolder.resetSagaContext();
         }
+    }
+
+    @Override
+    public int getOrder() {
+        return order;
     }
 }

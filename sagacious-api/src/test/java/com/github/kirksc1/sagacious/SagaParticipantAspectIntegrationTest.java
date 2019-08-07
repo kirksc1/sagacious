@@ -2,6 +2,10 @@ package com.github.kirksc1.sagacious;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +33,14 @@ public class SagaParticipantAspectIntegrationTest {
 
     @Autowired
     Orchestrator orchestrator;
+
+    @Autowired
+    @Qualifier("earlyTestAspect")
+    EarlyTestAspect earlyTestAspect;
+
+    @Autowired
+    @Qualifier("lateTestAspect")
+    LateTestAspect lateTestAspect;
 
     @org.springframework.boot.test.context.TestConfiguration
     static class TestConfiguration {
@@ -61,6 +74,16 @@ public class SagaParticipantAspectIntegrationTest {
         public TestIdentifierFactory testIdentifierFactory() {
             return new TestIdentifierFactory();
         }
+
+        @Bean
+        public EarlyTestAspect earlyTestAspect(SagaRepository repository) {
+            return new EarlyTestAspect(repository);
+        }
+
+        @Bean
+        public LateTestAspect lateTestAspect(SagaRepository repository) {
+            return new LateTestAspect(repository);
+        }
     }
 
     @AllArgsConstructor
@@ -78,6 +101,11 @@ public class SagaParticipantAspectIntegrationTest {
             participant.customizedIdentifierFactoryParticipate();
         }
 
+        @SagaOrchestrated
+        public void orderedParticipantIdentifierFactoryOrchestrate() {
+            participant.orderedIdentifierFactoryParticipate();
+        }
+
     }
 
     static class Participant {
@@ -89,6 +117,67 @@ public class SagaParticipantAspectIntegrationTest {
         @SagaParticipant(actionDefinitionFactory = "testFactory", identifierFactory = "testIdentifierFactory")
         public String customizedIdentifierFactoryParticipate() {
             return null;
+        }
+
+        @SagaParticipant(actionDefinitionFactory = "testFactory")
+        public String orderedIdentifierFactoryParticipate() {
+            return null;
+        }
+    }
+
+    @Aspect
+    @Getter
+    @RequiredArgsConstructor
+    @Order(-1)
+    public static class EarlyTestAspect {
+
+        private final SagaRepository repository;
+        private boolean participantAddedEarly = false;
+        private boolean participantAddedLate = false;
+
+        @Around("@annotation(com.github.kirksc1.sagacious.SagaParticipant)")
+        public Object doWork(ProceedingJoinPoint joinPoint) throws Throwable {
+            repository.findById(SagaContextHolder.getSagaContext().getIdentifier().toString())
+                    .ifPresent(saga -> participantAddedEarly = !saga.getParticipants().isEmpty());
+
+            Object retVal = joinPoint.proceed(joinPoint.getArgs());
+
+            repository.findById(SagaContextHolder.getSagaContext().getIdentifier().toString())
+                    .ifPresent(saga -> participantAddedLate = !saga.getParticipants().isEmpty());
+            return retVal;
+        }
+
+        public void reset() {
+            participantAddedEarly = false;
+            participantAddedLate = false;
+        }
+    }
+
+    @Aspect
+    @Getter
+    @RequiredArgsConstructor
+    @Order(1)
+    public static class LateTestAspect {
+
+        private final SagaRepository repository;
+        private boolean participantAddedEarly = false;
+        private boolean participantAddedLate = false;
+
+        @Around("@annotation(com.github.kirksc1.sagacious.SagaParticipant)")
+        public Object doWork(ProceedingJoinPoint joinPoint) throws Throwable {
+            repository.findById(SagaContextHolder.getSagaContext().getIdentifier().toString())
+                    .ifPresent(saga -> participantAddedEarly = !saga.getParticipants().isEmpty());
+
+            Object retVal = joinPoint.proceed(joinPoint.getArgs());
+
+            repository.findById(SagaContextHolder.getSagaContext().getIdentifier().toString())
+                    .ifPresent(saga -> participantAddedLate = !saga.getParticipants().isEmpty());
+            return retVal;
+        }
+
+        public void reset() {
+            participantAddedEarly = false;
+            participantAddedLate = false;
         }
     }
 
@@ -111,6 +200,9 @@ public class SagaParticipantAspectIntegrationTest {
     public void after() {
         identifierFactory.reset();
         testIdentifierFactory.reset();
+
+        earlyTestAspect.reset();
+        lateTestAspect.reset();
     }
 
     @Test
@@ -132,4 +224,23 @@ public class SagaParticipantAspectIntegrationTest {
 
         assertEquals(false, identifierFactory.buildCalled);
     }
+
+    @Test
+    @Transactional
+    public void testOrdered_whenSecondAspectOrderedLower_thenSecondAspectExecutedFirst() {
+        orchestrator.orderedParticipantIdentifierFactoryOrchestrate();
+
+        assertEquals(false, earlyTestAspect.isParticipantAddedEarly());
+        assertEquals(true, earlyTestAspect.isParticipantAddedLate());
+    }
+
+    @Test
+    @Transactional
+    public void testOrdered_whenSecondAspectOrderedHigher_thenSecondAspectExecutedLast() {
+        orchestrator.orderedParticipantIdentifierFactoryOrchestrate();
+
+        assertEquals(false, lateTestAspect.isParticipantAddedEarly());
+        assertEquals(false, lateTestAspect.isParticipantAddedLate());
+    }
+
 }
