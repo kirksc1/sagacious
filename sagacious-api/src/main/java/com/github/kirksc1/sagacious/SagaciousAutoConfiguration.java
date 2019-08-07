@@ -17,11 +17,13 @@ import java.util.List;
 public class SagaciousAutoConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean(name = "sagaOrchestratorAspect")
     public SagaOrchestratedAspect sagaOrchestratorAspect(ApplicationContext context) {
         return new SagaOrchestratedAspect(context);
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "sagaParticipantAspect")
     public SagaParticipantAspect sagaParticipantAspect(ApplicationContext context) {
         return new SagaParticipantAspect(context);
     }

@@ -23,6 +23,8 @@ public String createOrder(@RequestBody OrderResource orderResource) throws Excep
 ```
 Reference: [OrderController.java](sagacious-sample/src/main/java/com/github/kirksc1/sagacious/sample/orderservice/OrderController.java)
 
+**NOTE: @SagaOrchestrated may also be [customized](docs/sagaorchestrated-customizations.md).**
+
 ### Participant Registration
 Register a saga participant, and its compensating action, with the current saga, if present. 
 The method's return value is provided to a factory bean (named *paymentActionDefinitionFactory* below)
@@ -34,4 +36,5 @@ public String initiatePayment(String paymentDeviceId, Float amount) throws Faile
 }
 ```
 Reference: [PaymentServiceClient.java](sagacious-sample/src/main/java/com/github/kirksc1/sagacious/sample/orderservice/payments/PaymentServiceClient.java)
- 
+
+**NOTE: @SagaParticipant may also be [customized](docs/sagaparticipant-customizations.md).**
