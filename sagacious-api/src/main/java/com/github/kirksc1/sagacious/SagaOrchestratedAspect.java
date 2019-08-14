@@ -2,6 +2,7 @@ package com.github.kirksc1.sagacious;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -10,9 +11,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 @Aspect
 @RequiredArgsConstructor
+@Slf4j
 public class SagaOrchestratedAspect implements Ordered {
 
     public static final int DEFAULT_ORDER = 0;
@@ -27,30 +30,46 @@ public class SagaOrchestratedAspect implements Ordered {
 
     @Around("@annotation(com.github.kirksc1.sagacious.SagaOrchestrated)")
     public Object applySaga(ProceedingJoinPoint joinPoint) throws Throwable {
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
+        SagaOrchestrated sagaOrchestrated = findSagaOrchestrated(joinPoint);
+        if (sagaOrchestrated != null) {
+            SagaManager sagaManager = Optional.ofNullable(context.getBean(sagaOrchestrated.sagaManager(), SagaManager.class))
+                    .orElseThrow(() -> new IllegalStateException("Unable to locate the specified SagaManager bean for name=" + sagaOrchestrated.sagaManager()));
 
-        SagaOrchestrated sagaOrchestrated = method.getAnnotation(SagaOrchestrated.class);
-        SagaManager sagaManager = context.getBean(sagaOrchestrated.sagaManager(), SagaManager.class);
-        IdentifierFactory identifierFactory = context.getBean(sagaOrchestrated.identifierFactory(), IdentifierFactory.class);
+            IdentifierFactory identifierFactory = Optional.ofNullable(context.getBean(sagaOrchestrated.identifierFactory(), IdentifierFactory.class))
+                    .orElseThrow(() -> new IllegalStateException("Unable to locate the specified IdentifierFactory bean for name=" + sagaOrchestrated.identifierFactory()));
 
-        SagaIdentifier sagaId = new SagaIdentifier(identifierFactory.buildIdentifier());
-        sagaManager.createSaga(sagaId);
+            SagaIdentifier sagaId = new SagaIdentifier(identifierFactory.buildIdentifier());
 
-        SagaContext sagaContext = new SagaContext(sagaManager, sagaId);
+            try {
+                sagaManager.createSaga(sagaId);
 
-        try {
-            SagaContextHolder.setSagaContext(sagaContext);
+                SagaContext sagaContext = new SagaContext(sagaManager, sagaId);
+                SagaContextHolder.setSagaContext(sagaContext);
 
-            Object retVal = joinPoint.proceed();
-            sagaManager.completeSaga(sagaId);
-            return retVal;
-        } catch (Exception e) {
-            sagaManager.failSaga(sagaId);
-            throw e;
-        } finally {
-            SagaContextHolder.resetSagaContext();
+                Object retVal = joinPoint.proceed();
+                sagaManager.completeSaga(sagaId);
+                return retVal;
+            } catch (Exception e) {
+                sagaManager.failSaga(sagaId);
+                throw e;
+            } finally {
+                SagaContextHolder.resetSagaContext();
+            }
+        } else {
+            throw new IllegalStateException("The SagaOrchestrated could not be located");
         }
+    }
+
+    private SagaOrchestrated findSagaOrchestrated(ProceedingJoinPoint joinPoint) {
+        SagaOrchestrated retVal = null;
+
+        if (joinPoint.getSignature() instanceof MethodSignature) {
+            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+            Method method = signature.getMethod();
+            retVal = method.getAnnotation(SagaOrchestrated.class);
+        }
+
+        return retVal;
     }
 
     @Override
