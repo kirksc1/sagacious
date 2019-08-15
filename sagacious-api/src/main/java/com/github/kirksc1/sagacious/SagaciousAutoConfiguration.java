@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kirksc1.sagacious.executor.RestTemplateExecutor;
 import com.github.kirksc1.sagacious.identifier.UuidFactory;
 import com.github.kirksc1.sagacious.strategy.SynchronousParticipantOrderStrategy;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +41,8 @@ public class SagaciousAutoConfiguration {
     }
 
     @Bean
-    public CompensatingActionExecutor compensatingActionExecutor(RestTemplate restTemplate) {
+    @ConditionalOnBean(RestTemplate.class)
+    public CompensatingActionExecutor restCompensatingActionExecutor(RestTemplate restTemplate) {
         return new RestTemplateExecutor(restTemplate);
     }
 
@@ -54,12 +56,6 @@ public class SagaciousAutoConfiguration {
     @ConditionalOnMissingBean
     public CompensatingActionManager compensatingActionManager(CompensatingActionDefinitionMatcher matcher, List<CompensatingActionExecutor> executors) {
         return new CompensatingActionManager(matcher, executors);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
     }
 
     @Bean

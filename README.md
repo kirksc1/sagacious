@@ -38,3 +38,27 @@ public String initiatePayment(String paymentDeviceId, Float amount) throws Faile
 Reference: [PaymentServiceClient.java](sagacious-sample/src/main/java/com/github/kirksc1/sagacious/sample/orderservice/payments/PaymentServiceClient.java)
 
 **NOTE: @SagaParticipant may also be [customized](docs/sagaparticipant-customizations.md).**
+
+### Compensating Actions
+Within a saga, each step has a compensating action that, upon saga failure, should effectively 
+undo the step.  For example, a step that authorized payment for an order might have a compensating
+action that reversed the authorization.  The compensating action need not return the entire system 
+back to the pre-saga state.  It only needs to return it to effectively the same state.  Each system
+may have its own view of what "effectively" means in its context.
+
+Sagacious uses a CompensatingActionDefinition to define the details of the action that needs to
+be executed for a step should a saga failure occur.  These definitions are executed by
+CompensatingActionExecutors.  These executors may take many forms that communicate over various 
+channels (i.e. REST, JMS).  Each executor describes the definition(s) that it can execute through 
+the use of the Executable annotation.
+
+```java
+@Executable(scheme="http")
+@Executable(scheme="https")
+public class RestTemplateExecutor implements CompensatingActionExecutor {
+    // implementation
+}
+```
+
+CompensatingActionExecutor beans are checked in order (according to Spring's Ordered).  The first
+bean that can execute the definition is passed the definition for execution.

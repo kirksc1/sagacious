@@ -6,6 +6,7 @@ import com.github.kirksc1.sagacious.CompensatingActionExecutor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -19,10 +20,18 @@ import java.util.Optional;
 @Slf4j
 @Executable(scheme="http")
 @Executable(scheme="https")
-public class RestTemplateExecutor implements CompensatingActionExecutor {
+public class RestTemplateExecutor implements CompensatingActionExecutor, Ordered {
+
+    private static final int DEFAULT_ORDER = 0;
 
     @NonNull
     private final RestTemplate restTemplate;
+
+    private final int order;
+
+    public RestTemplateExecutor(RestTemplate restTemplate) {
+        this(restTemplate, DEFAULT_ORDER);
+    }
 
     @Override
     public boolean execute(CompensatingActionDefinition definition) {
@@ -47,5 +56,10 @@ public class RestTemplateExecutor implements CompensatingActionExecutor {
             log.error("An error occurred during compensating action=" + definition);
         }
         return retVal;
+    }
+
+    @Override
+    public int getOrder() {
+        return order;
     }
 }

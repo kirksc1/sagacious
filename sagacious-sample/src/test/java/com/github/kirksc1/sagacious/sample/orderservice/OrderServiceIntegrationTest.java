@@ -8,8 +8,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -35,6 +38,14 @@ public class OrderServiceIntegrationTest {
 
     @Autowired
     SagaRepository sagaRepository;
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        RestTemplate restTemplate() {
+            return new RestTemplate();
+        }
+    }
 
     @After
     public void after() {

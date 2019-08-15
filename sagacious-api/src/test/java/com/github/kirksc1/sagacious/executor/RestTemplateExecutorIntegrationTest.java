@@ -38,6 +38,11 @@ public class RestTemplateExecutorIntegrationTest {
             return new TestController();
         }
 
+        @Bean
+        RestTemplate restTemplate() {
+            return new RestTemplate();
+        }
+
     }
 
     @RestController
