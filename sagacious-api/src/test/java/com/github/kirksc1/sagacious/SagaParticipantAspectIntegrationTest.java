@@ -43,17 +43,15 @@ public class SagaParticipantAspectIntegrationTest {
     @Qualifier("lateTestAspect")
     LateTestAspect lateTestAspect;
 
+    @Autowired
+    TestActionFactory testFactory;
+
     @org.springframework.boot.test.context.TestConfiguration
     static class TestConfiguration {
 
         @Bean
-        public CompensatingActionDefinitionFactory<String> testFactory() {
-            return new CompensatingActionDefinitionFactory<String>() {
-                @Override
-                public CompensatingActionDefinition buildDefinition(String item) {
-                    return new CompensatingActionDefinition();
-                }
-            };
+        public TestActionFactory testFactory() {
+            return new TestActionFactory();
         }
 
         @Bean
@@ -92,6 +90,22 @@ public class SagaParticipantAspectIntegrationTest {
         }
     }
 
+    @Getter
+    static class TestActionFactory implements CompensatingActionDefinitionFactory<String> {
+        private String item;
+
+        @Override
+        public CompensatingActionDefinition buildDefinition(String item) {
+            this.item = item;
+
+            return new CompensatingActionDefinition();
+        }
+
+        public void reset() {
+            this.item = null;
+        }
+    }
+
     @AllArgsConstructor
     static class Orchestrator {
 
@@ -112,6 +126,11 @@ public class SagaParticipantAspectIntegrationTest {
             participant.orderedIdentifierFactoryParticipate();
         }
 
+        @SagaOrchestrated
+        public void participantDataOrchestrate() {
+            participant.participantDataParticipate("1", "2");
+        }
+
     }
 
     static class Participant {
@@ -129,6 +148,15 @@ public class SagaParticipantAspectIntegrationTest {
         public String orderedIdentifierFactoryParticipate() {
             return null;
         }
+
+        @SagaParticipant(actionDefinitionFactory = "testFactory")
+        public String participantDataParticipate(String test, @ParticipantData String data) {
+            return null;
+        }
+    }
+
+    static class User {
+
     }
 
     @Aspect
@@ -209,6 +237,8 @@ public class SagaParticipantAspectIntegrationTest {
 
         earlyTestAspect.reset();
         lateTestAspect.reset();
+
+        testFactory.reset();
     }
 
     @Test
@@ -247,6 +277,14 @@ public class SagaParticipantAspectIntegrationTest {
 
         assertEquals(false, lateTestAspect.isParticipantAddedEarly());
         assertEquals(false, lateTestAspect.isParticipantAddedLate());
+    }
+
+    @Test
+    @Transactional
+    public void testParticipantData_whenParticipantData_thenAddParticipantBasedOnParticipantData() {
+        orchestrator.participantDataOrchestrate();
+
+        assertEquals("2", testFactory.getItem());
     }
 
 }
