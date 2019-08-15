@@ -38,6 +38,11 @@ public class RestTemplateExecutorIntegrationTest {
             return new TestController();
         }
 
+        @Bean
+        RestTemplate restTemplate() {
+            return new RestTemplate();
+        }
+
     }
 
     @RestController
@@ -88,5 +93,19 @@ public class RestTemplateExecutorIntegrationTest {
         assertEquals(true, testController.isCalled());
         assertEquals("test-value", testController.getHeader());
         assertEquals("test-body", testController.getBody());
+    }
+
+    @Test
+    public void testException() {
+        CompensatingActionDefinition definition = new CompensatingActionDefinition();
+        definition.setUri("http://localhost/fail");
+        definition.setMethod("POST");
+        definition.setBody("test-body");
+
+        definition.getHeaders().add(new Header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
+
+        boolean execSuccess = executor.execute(definition);
+
+        assertEquals(false, execSuccess);
     }
 }
