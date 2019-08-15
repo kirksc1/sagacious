@@ -9,6 +9,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 @Aspect
@@ -27,29 +28,62 @@ public class SagaParticipantAspect implements Ordered {
 
     @Around("@annotation(com.github.kirksc1.sagacious.SagaParticipant)")
     public Object addParticipant(ProceedingJoinPoint joinPoint) throws Throwable {
-        Object retVal = joinPoint.proceed();
+        boolean participantAdded = false;
 
         SagaContext sagaContext = SagaContextHolder.getSagaContext();
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+
         if (sagaContext != null) {
-            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-            Method method = signature.getMethod();
+            Object participantData = findParticipantData(joinPoint, method);
 
-            SagaParticipant sagaParticipant = method.getAnnotation(SagaParticipant.class);
-            Object factoryBeanObj = context.getBean(sagaParticipant.actionDefinitionFactory());
-            if (factoryBeanObj instanceof CompensatingActionDefinitionFactory) {
-                CompensatingActionDefinitionFactory factory = (CompensatingActionDefinitionFactory) factoryBeanObj;
-                CompensatingActionDefinition definition = factory.buildDefinition(retVal);
-
-                IdentifierFactory identifierFactory = context.getBean(sagaParticipant.identifierFactory(), IdentifierFactory.class);
-                ParticipantIdentifier participantIdentifier = new ParticipantIdentifier(identifierFactory.buildIdentifier());
-
-                sagaContext.getSagaManager().addParticipant(sagaContext.getIdentifier(), participantIdentifier, definition);
-            } else {
-                throw new IllegalStateException("The actionDefinitionFactory bean defined is not of type CompensatingActionDefinitionFactory");
+            if (participantData != null) {
+                addParticipant(sagaContext, method, participantData);
+                participantAdded = true;
             }
         }
 
+        Object retVal = joinPoint.proceed();
+
+        if (!participantAdded && sagaContext != null) {
+            addParticipant(sagaContext, method, retVal);
+        }
+
         return retVal;
+    }
+
+    private Object findParticipantData(ProceedingJoinPoint joinPoint, Method method) {
+        Object participantData = null;
+
+        Annotation[][] annotations = method.getParameterAnnotations();
+        for (int i=0; i < annotations.length; i++) {
+            for (int j=0; j < annotations[i].length; j++) {
+                if (annotations[i][j].annotationType().equals(ParticipantData.class)) {
+                    participantData = joinPoint.getArgs()[i];
+                    break;
+                }
+            }
+            if (participantData != null) {
+                break;
+            }
+        }
+        return participantData;
+    }
+
+    private void addParticipant(SagaContext sagaContext, Method method, Object participantData) {
+        SagaParticipant sagaParticipant = method.getAnnotation(SagaParticipant.class);
+        Object factoryBeanObj = context.getBean(sagaParticipant.actionDefinitionFactory());
+        if (factoryBeanObj instanceof CompensatingActionDefinitionFactory) {
+            CompensatingActionDefinitionFactory factory = (CompensatingActionDefinitionFactory) factoryBeanObj;
+            CompensatingActionDefinition definition = factory.buildDefinition(participantData);
+
+            IdentifierFactory identifierFactory = context.getBean(sagaParticipant.identifierFactory(), IdentifierFactory.class);
+            ParticipantIdentifier participantIdentifier = new ParticipantIdentifier(identifierFactory.buildIdentifier());
+
+            sagaContext.getSagaManager().addParticipant(sagaContext.getIdentifier(), participantIdentifier, definition);
+        } else {
+            throw new IllegalStateException("The actionDefinitionFactory bean defined is not of type CompensatingActionDefinitionFactory");
+        }
     }
 
     @Override

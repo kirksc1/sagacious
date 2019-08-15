@@ -27,8 +27,18 @@ Reference: [OrderController.java](sagacious-sample/src/main/java/com/github/kirk
 
 ### Participant Registration
 Register a saga participant, and its compensating action, with the current saga, if present. 
-The method's return value is provided to a factory bean (named *paymentActionDefinitionFactory* below)
-method that creates a definition for the compensating action.  
+The method's parameter or return value may be provided to a factory bean 
+(named *paymentActionDefinitionFactory* below) method that creates a definition for the compensating action.
+
+Annotating a parameter with @ParticipantData indicates it should be passed to the factory as input.  
+```java
+@SagaParticipant(actionDefinitionFactory="paymentActionDefinitionFactory")
+public String initiatePayment(@ParticipantData String paymentDeviceId, Float amount) throws FailedPaymentException {
+    //more clever business logic
+}
+```
+If no parameter is annotated with @ParticipantData, then the method's return value will be 
+passed to the factory as input.
 ```java
 @SagaParticipant(actionDefinitionFactory="paymentActionDefinitionFactory")
 public String initiatePayment(String paymentDeviceId, Float amount) throws FailedPaymentException {
