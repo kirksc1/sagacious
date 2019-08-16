@@ -1,7 +1,5 @@
 package com.github.kirksc1.sagacious.annotation;
 
-import com.github.kirksc1.sagacious.annotation.IdentifierFactory;
-
 import java.util.UUID;
 
 public class UuidFactory implements IdentifierFactory {

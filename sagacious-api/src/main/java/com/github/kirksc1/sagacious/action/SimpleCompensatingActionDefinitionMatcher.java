@@ -1,7 +1,6 @@
 package com.github.kirksc1.sagacious.action;
 
 import com.github.kirksc1.sagacious.CompensatingActionDefinition;
-import com.github.kirksc1.sagacious.action.CompensatingActionDefinitionMatcher;
 import com.github.kirksc1.sagacious.annotation.Executable;
 
 import java.net.URI;
