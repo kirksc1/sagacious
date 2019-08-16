@@ -1,6 +1,6 @@
 package com.github.kirksc1.sagacious.sample.orderservice.shipments;
 
-import com.github.kirksc1.sagacious.SagaParticipant;
+import com.github.kirksc1.sagacious.annotation.SagaParticipant;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
