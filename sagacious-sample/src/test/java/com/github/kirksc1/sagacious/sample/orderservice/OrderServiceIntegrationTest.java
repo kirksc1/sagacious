@@ -1,6 +1,6 @@
 package com.github.kirksc1.sagacious.sample.orderservice;
 
-import com.github.kirksc1.sagacious.SagaRepository;
+import com.github.kirksc1.sagacious.repository.SagaRepository;
 import com.github.kirksc1.sagacious.sample.paymentservice.PaymentRepository;
 import com.github.kirksc1.sagacious.sample.shippingservice.ShipmentRepository;
 import org.junit.After;

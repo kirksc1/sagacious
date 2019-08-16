@@ -1,6 +1,6 @@
 package com.github.kirksc1.sagacious.sample.orderservice;
 
-import com.github.kirksc1.sagacious.SagaOrchestrated;
+import com.github.kirksc1.sagacious.annotation.SagaOrchestrated;
 import com.github.kirksc1.sagacious.SagaManager;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

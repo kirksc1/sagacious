@@ -1,6 +1,8 @@
 package com.github.kirksc1.sagacious;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.kirksc1.sagacious.Attribute;
+import com.github.kirksc1.sagacious.Header;
 import lombok.Getter;
 import lombok.Setter;
 

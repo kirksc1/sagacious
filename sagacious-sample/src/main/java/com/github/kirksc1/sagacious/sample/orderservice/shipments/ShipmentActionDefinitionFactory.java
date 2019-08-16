@@ -1,7 +1,7 @@
 package com.github.kirksc1.sagacious.sample.orderservice.shipments;
 
 import com.github.kirksc1.sagacious.CompensatingActionDefinition;
-import com.github.kirksc1.sagacious.CompensatingActionDefinitionFactory;
+import com.github.kirksc1.sagacious.action.CompensatingActionDefinitionFactory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;

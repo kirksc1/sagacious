@@ -2,6 +2,9 @@ package com.github.kirksc1.sagacious;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.kirksc1.sagacious.action.CompensatingActionStrategy;
+import com.github.kirksc1.sagacious.repository.Participant;
+import com.github.kirksc1.sagacious.repository.Saga;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.CrudRepository;
