@@ -1,13 +1,12 @@
 package com.github.kirksc1.sagacious.action;
 
 import com.github.kirksc1.sagacious.CompensatingActionDefinition;
-import com.github.kirksc1.sagacious.action.CompensatingActionDefinitionMatcher;
-import com.github.kirksc1.sagacious.action.CompensatingActionExecutor;
-import com.github.kirksc1.sagacious.action.CompensatingActionManager;
 import com.github.kirksc1.sagacious.annotation.Executable;
 import lombok.Getter;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +18,28 @@ public class CompensatingActionManagerTest {
     private TestCompensatingActionDefinitionMatcher matcher = new TestCompensatingActionDefinitionMatcher(true);
     private TestCompensatingActionDefinitionMatcher noMatcher = new TestCompensatingActionDefinitionMatcher(false);
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @After
     public void after() {
         matcher.reset();
+    }
+
+    @Test
+    public void testConstructor_whenNullMatcher_thenThrowIllegalArgumentException() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("CompensatingActionDefinitionMatcher");
+
+        new CompensatingActionManager(null, new ArrayList<>());
+    }
+
+    @Test
+    public void testConstructor_whenNullList_thenThrowIllegalArgumentException() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("executor list");
+
+        new CompensatingActionManager(new SimpleCompensatingActionDefinitionMatcher(), null);
     }
 
     @Test

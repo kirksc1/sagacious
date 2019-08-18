@@ -6,7 +6,15 @@ import com.github.kirksc1.sagacious.annotation.Executable;
 import java.net.URI;
 import java.util.Optional;
 
+/**
+ * SimpleCompensatingActionDefinitionMatcher is a simple, concrete implementation of the
+ * {@link CompensatingActionDefinitionMatcher} interface.
+ */
 public class SimpleCompensatingActionDefinitionMatcher implements CompensatingActionDefinitionMatcher {
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean matches(Executable specification, CompensatingActionDefinition instance) {
         boolean retVal = true;

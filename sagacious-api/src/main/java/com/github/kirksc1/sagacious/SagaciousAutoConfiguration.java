@@ -19,6 +19,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
+/**
+ * SagaciousAutoConfiguration contains the bean definitions for the autoconfigured beans to
+ * deliver the Sagacious feature set.
+ */
 @Configuration
 public class SagaciousAutoConfiguration {
 

@@ -1,12 +1,32 @@
 package com.github.kirksc1.sagacious.action.web;
 
-import com.github.kirksc1.sagacious.action.web.RestTemplateExecutor;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.junit.Assert.assertEquals;
 
 public class RestTemplateExecutorTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void testConstructorRestTemplate_whenRestTemplateNull_thenThrowIllegalArgumentException() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("RestTemplate");
+
+        new RestTemplateExecutor(null);
+    }
+
+    @Test
+    public void testConstructorRestTemplateOrder_whenRestTemplateNull_thenThrowIllegalArgumentException() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("RestTemplate");
+
+        new RestTemplateExecutor(null, 1);
+    }
 
     @Test
     public void testGetOrder_whenDefaultOrder_thenOrderIsZero() {
