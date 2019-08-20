@@ -6,6 +6,9 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Saga is the JPA representation of a saga.
+ */
 @Entity
 @Data
 @Table(name = "saga")

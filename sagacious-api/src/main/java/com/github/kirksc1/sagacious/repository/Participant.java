@@ -6,6 +6,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+/**
+ * Participant is the JPA representation of a saga participant.
+ */
 @Entity
 @Getter
 @Table(name = "participant")

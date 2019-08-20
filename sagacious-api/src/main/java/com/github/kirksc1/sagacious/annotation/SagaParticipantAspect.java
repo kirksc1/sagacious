@@ -1,35 +1,62 @@
 package com.github.kirksc1.sagacious.annotation;
 
-import com.github.kirksc1.sagacious.*;
+import com.github.kirksc1.sagacious.CompensatingActionDefinition;
+import com.github.kirksc1.sagacious.ParticipantIdentifier;
 import com.github.kirksc1.sagacious.action.CompensatingActionDefinitionFactory;
 import com.github.kirksc1.sagacious.context.SagaContext;
 import com.github.kirksc1.sagacious.context.SagaContextHolder;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
+import org.springframework.util.Assert;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+/**
+ * SagaParticipantAspect is an aspect that operates around methods annotated with @{@link SagaParticipant} and
+ * adds a participant to the current saga.
+ */
 @Aspect
-@RequiredArgsConstructor
 public class SagaParticipantAspect implements Ordered {
 
+    /**
+     * The default order for the aspect.
+     */
     public static final int DEFAULT_ORDER = 0;
 
-    @NonNull
     private final ApplicationContext context;
     private final int order;
 
+    /**
+     * Construct a new instance with the provided ApplicationContext.
+     * @param context The spring ApplicationContext.
+     */
     public SagaParticipantAspect(ApplicationContext context) {
         this(context, DEFAULT_ORDER);
     }
 
+    /**
+     * Construct a new instance with the provided ApplicationContext.
+     * @param context The spring ApplicationContext.
+     * @param order The Ordered order governing the order of aspect execution.
+     */
+    public SagaParticipantAspect(ApplicationContext context, int order) {
+        Assert.notNull(context, "The ApplicationContext provided is null");
+
+        this.context = context;
+        this.order = order;
+    }
+
+    /**
+     * Add a participant to the saga for the method execution.
+     * @param joinPoint The ProceedingJoinPoint for the method call.
+     * @return The return object of the method invocation.
+     * @throws Throwable An exception that occurs during execution.
+     */
     @Around("@annotation(com.github.kirksc1.sagacious.annotation.SagaParticipant)")
     public Object addParticipant(ProceedingJoinPoint joinPoint) throws Throwable {
         boolean participantAdded = false;
@@ -56,6 +83,12 @@ public class SagaParticipantAspect implements Ordered {
         return retVal;
     }
 
+    /**
+     * Find the ParticipantData within the provided method invocation.
+     * @param joinPoint The ProceedingJoinPoint for the method call.
+     * @param method The method for the method call.
+     * @return The method parameter identified as the ParticipantData if found, otherwise null.
+     */
     private Object findParticipantData(ProceedingJoinPoint joinPoint, Method method) {
         Object participantData = null;
 
@@ -74,6 +107,13 @@ public class SagaParticipantAspect implements Ordered {
         return participantData;
     }
 
+    /**
+     * Add the method as a participant to the saga.
+     * @param sagaContext The current SagaContext.
+     * @param method The method for the method call.
+     * @param participantData The data that can be used to build the CompensatingActionDefinition via the
+     * CompensatingActionDefinitionFactory.
+     */
     private void addParticipant(SagaContext sagaContext, Method method, Object participantData) {
         SagaParticipant sagaParticipant = method.getAnnotation(SagaParticipant.class);
         Object factoryBeanObj = context.getBean(sagaParticipant.actionDefinitionFactory());
@@ -90,6 +130,9 @@ public class SagaParticipantAspect implements Ordered {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getOrder() {
         return order;

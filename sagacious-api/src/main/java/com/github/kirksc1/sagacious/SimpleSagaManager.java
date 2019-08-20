@@ -5,28 +5,42 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kirksc1.sagacious.action.CompensatingActionStrategy;
 import com.github.kirksc1.sagacious.repository.Participant;
 import com.github.kirksc1.sagacious.repository.Saga;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-@RequiredArgsConstructor
+/**
+ * SimpleSagaManager provides a simple, concrete implementation of the {@link SagaManager} interface.
+ */
 public class SimpleSagaManager implements SagaManager {
 
     public static final String THE_SAGA_PROVIDED_WAS_NOT_FOUND = "The Saga provided was not found";
     public static final String THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL = "The SagaIdentifier provided is null";
 
-    @NonNull
     private final CrudRepository<Saga, String> repository;
-
-    @NonNull
     private final CompensatingActionStrategy compensatingActionStrategy;
-
-    @NonNull
     private final ObjectMapper objectMapper;
 
+    /**
+     * Construct a new instance.
+     * @param repository The repository for storing Saga information.
+     * @param compensatingActionStrategy The strategy for executing compensating actions.
+     * @param objectMapper An object mapper for serializing/deserializing objects.
+     */
+    public SimpleSagaManager(CrudRepository<Saga, String> repository, CompensatingActionStrategy compensatingActionStrategy, ObjectMapper objectMapper) {
+        Assert.notNull(repository, "The repository provided is null");
+        Assert.notNull(compensatingActionStrategy, "The CompensatingActionStrategy provided is null");
+        Assert.notNull(objectMapper, "The ObjectMapper provided is null");
+
+        this.repository = repository;
+        this.compensatingActionStrategy = compensatingActionStrategy;
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public boolean createSaga(SagaIdentifier sagaIdentifier) {
@@ -41,6 +55,9 @@ public class SimpleSagaManager implements SagaManager {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean completeSaga(SagaIdentifier sagaIdentifier) {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);
@@ -57,6 +74,9 @@ public class SimpleSagaManager implements SagaManager {
         return retVal;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean addParticipant(SagaIdentifier sagaIdentifier, ParticipantIdentifier participantIdentifier, CompensatingActionDefinition compensatingAction) {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);
@@ -89,6 +109,9 @@ public class SimpleSagaManager implements SagaManager {
         }).orElseThrow(() -> new IllegalArgumentException(THE_SAGA_PROVIDED_WAS_NOT_FOUND));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean failSaga(SagaIdentifier sagaIdentifier) {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);
@@ -107,6 +130,9 @@ public class SimpleSagaManager implements SagaManager {
         return retVal;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean hasSagaFailed(SagaIdentifier sagaIdentifier) {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);
@@ -115,6 +141,9 @@ public class SimpleSagaManager implements SagaManager {
                 .orElseThrow(() -> new IllegalArgumentException(THE_SAGA_PROVIDED_WAS_NOT_FOUND));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean hasSagaCompleted(SagaIdentifier sagaIdentifier) {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);

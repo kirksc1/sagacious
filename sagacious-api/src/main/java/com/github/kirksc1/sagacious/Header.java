@@ -1,15 +1,41 @@
 package com.github.kirksc1.sagacious;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
+import org.springframework.util.Assert;
 
-@AllArgsConstructor
-@Getter
+/**
+ * A name-value pair to be communicated in the compensating action.
+ */
 public class Header {
 
-    @NonNull
-    private String name;
-    @NonNull
-    private String value;
+    private final String name;
+    private final String value;
+
+    /**
+     * Construct a new Header with the provided name-value pair.
+     * @param name The name of the header.
+     * @param value The value of the header.
+     */
+    public Header(String name, String value) {
+        Assert.notNull(name, "The name provided is null");
+        Assert.notNull(value, "The value provided is null");
+
+        this.name = name;
+        this.value = value;
+    }
+
+    /**
+     * Retrieve the name of the header.
+     * @return The name of the header.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Retrieve the value of the header.
+     * @return The value of the header.
+     */
+    public String getValue() {
+        return value;
+    }
 }

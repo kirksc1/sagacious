@@ -3,19 +3,21 @@ package com.github.kirksc1.sagacious.action.web;
 import com.github.kirksc1.sagacious.CompensatingActionDefinition;
 import com.github.kirksc1.sagacious.action.CompensatingActionExecutor;
 import com.github.kirksc1.sagacious.annotation.Executable;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.util.Assert;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.Optional;
 
-@RequiredArgsConstructor
+/**
+ * RestTemplateExecutor is a concrete implementation of the {@link CompensatingActionExecutor} interface
+ * that can execute HTTP(S) web requests as defined within a {@link CompensatingActionDefinition}.
+ */
 @Slf4j
 @Executable(scheme="http")
 @Executable(scheme="https")
@@ -23,15 +25,33 @@ public class RestTemplateExecutor implements CompensatingActionExecutor, Ordered
 
     private static final int DEFAULT_ORDER = 0;
 
-    @NonNull
     private final RestTemplate restTemplate;
-
     private final int order;
 
+    /**
+     * Construct a new RestTemplateExecutor with the provided RestTemplate.
+     * @param restTemplate The RestTemplate.
+     */
     public RestTemplateExecutor(RestTemplate restTemplate) {
         this(restTemplate, DEFAULT_ORDER);
     }
 
+    /**
+     * Construct a new RestTemplateExecutor with the provided RestTemplate and order.
+     * @param restTemplate The RestTemplate.
+     * @param order The spring Ordered value of the CompensatingActionExecutor.
+     */
+    public RestTemplateExecutor(RestTemplate restTemplate, int order) {
+        Assert.notNull(restTemplate, "The RestTemplate provided is null");
+
+        this.restTemplate = restTemplate;
+        this.order = order;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>The RestTemplateExecutor initiates web requests according to the {@link CompensatingActionDefinition}</p>
+     */
     @Override
     public boolean execute(CompensatingActionDefinition definition) {
         boolean retVal = false;
@@ -57,6 +77,9 @@ public class RestTemplateExecutor implements CompensatingActionExecutor, Ordered
         return retVal;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getOrder() {
         return order;
