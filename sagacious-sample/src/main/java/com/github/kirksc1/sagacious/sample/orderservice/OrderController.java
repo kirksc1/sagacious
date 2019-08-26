@@ -24,7 +24,7 @@ public class OrderController {
 
     @RequestMapping(path = "/orders", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @SagaOrchestrated
+    @SagaOrchestrated(failFor = Exception.class)
     public String createOrder(@RequestBody OrderResource orderResource) throws Exception {
 
         Order order = assembler.assembleOrder(orderResource);

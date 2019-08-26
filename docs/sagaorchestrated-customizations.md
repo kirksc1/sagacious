@@ -1,5 +1,28 @@
 # Customizing @SagaOrchestrated
 
+## Custom Exception Handling Behavior
+Sagacious aligns itself with the Spring @Transactional failure strategy (i.e. Rollback on 
+Error or unchecked exceptions, but not checked exceptions).  However, in the case of a saga
+it indicates the need to fail a saga rather than rollback a transaction. The @SagaOrchestrated
+annotation offers a similar set of attributes for customizing the saga failure behavior.
+
+For example...
+```java
+@SagaOrchestrated(
+        failOn = FailException.class, 
+        failOnClassName = {"MyFailException", "MyOtherFailException"},
+        noFailOn = NoFailException.class, 
+        noFailOnClassName = {"MyNoFailException", "MyOtherNoFailException"}
+        )
+public void startSaga() {
+    //do work
+}
+``` 
+In this scenario, an occurrence of a FailException, MyFailException, or MyOtherFailException would all 
+result in a saga failure.  However, an occurrence of a NoFailException, MyNoFailException, or 
+MyOtherNoFailException would NOT result in a saga failure.  In the case of multiple matches, the 
+match that most closely matches the thrown exception class in the class hierarchy will win.
+
 ## Custom SagaManager
 Customization of the SagaManager functionality can be accomplished through the creation of
 an alternative, concrete implementation of the SagaManager interface. It can be leveraged

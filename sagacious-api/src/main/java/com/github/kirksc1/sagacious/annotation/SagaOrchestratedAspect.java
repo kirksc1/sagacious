@@ -14,6 +14,8 @@ import org.springframework.core.Ordered;
 import org.springframework.util.Assert;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -81,9 +83,11 @@ public class SagaOrchestratedAspect implements Ordered {
                 sagaManager.completeSaga(sagaId);
                 log.debug("Saga {} completed", sagaId);
                 return retVal;
-            } catch (Exception e) {
-                sagaManager.failSaga(sagaId);
-                log.debug("Saga {} failed", sagaId);
+            } catch (Throwable e) {
+                if (buildExceptionManager(sagaOrchestrated).failOn(e)) {
+                    sagaManager.failSaga(sagaId);
+                    log.debug("Saga {} failed", sagaId);
+                }
                 throw e;
             } finally {
                 SagaContextHolder.resetSagaContext();
@@ -108,6 +112,37 @@ public class SagaOrchestratedAspect implements Ordered {
         }
 
         return retVal;
+    }
+
+    /**
+     * Build an ExceptionManager.
+     * @param annotation The SagaOrchestrated annotation.
+     * @return A RuleBasedExceptionManager if rules are provided, otherwise a DefaultExceptionManager.
+     */
+    private ExceptionManager buildExceptionManager(SagaOrchestrated annotation) {
+        ExceptionManager exceptionManager = new DefaultExceptionManager();
+
+        List<ExceptionRule> rules = new ArrayList<>();
+
+        for (Class<?> cls : annotation.failFor()) {
+            rules.add(new ExceptionRule(cls, true));
+        }
+        for (String clsName : annotation.failForClassName()) {
+            rules.add(new ExceptionRule(clsName, true));
+        }
+
+        for (Class<?> cls : annotation.noFailFor()) {
+            rules.add(new ExceptionRule(cls, false));
+        }
+        for (String clsName : annotation.noFailForClassName()) {
+            rules.add(new ExceptionRule(clsName, false));
+        }
+
+        if (!rules.isEmpty()) {
+            exceptionManager = new RuleBasedExceptionManager(rules);
+        }
+
+        return exceptionManager;
     }
 
     /**
