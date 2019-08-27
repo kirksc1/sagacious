@@ -1,7 +1,7 @@
-package com.github.kirksc1.sagacious.sample.orderservice;
+package com.github.kirksc1.sagacious.integrationapp.orderservice;
 
-import com.github.kirksc1.sagacious.annotation.SagaOrchestrated;
 import com.github.kirksc1.sagacious.SagaManager;
+import com.github.kirksc1.sagacious.annotation.SagaOrchestrated;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
