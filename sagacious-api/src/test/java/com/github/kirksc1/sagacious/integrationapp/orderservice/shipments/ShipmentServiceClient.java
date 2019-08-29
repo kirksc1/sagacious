@@ -7,14 +7,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.List;
 
-@Service
 @RequiredArgsConstructor
 public class ShipmentServiceClient {
 
@@ -25,7 +23,7 @@ public class ShipmentServiceClient {
     private Environment environment;
 
     @SagaParticipant(actionDefinitionFactory="shipmentActionDefinitionFactory")
-    public String initiateShipment(String destinationId, List<ShipmentItem> items) throws FailedShipmentException {
+    public String initiateShipment(String destinationId, List<ShipmentItem> items) throws Exception {
         Shipment shipment = new Shipment();
         shipment.setDestinationId(destinationId);
         shipment.setItems(items);
@@ -39,7 +37,11 @@ public class ShipmentServiceClient {
         try {
             return restTemplate.postForEntity(uri, shipmentEntity, String.class).getBody();
         } catch (HttpClientErrorException e) {
-            throw new FailedShipmentException(e);
+            throw handle(e);
         }
+    }
+
+    protected Exception handle(HttpClientErrorException e)  {
+        return new FailedShipmentException(e);
     }
 }

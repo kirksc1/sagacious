@@ -1,10 +1,8 @@
 package com.github.kirksc1.sagacious.integrationapp.orderservice;
 
-import org.springframework.stereotype.Component;
-
 import java.util.stream.Collectors;
 
-@Component
+
 public class OrderAssembler {
 
     public Order assembleOrder(OrderResource resource) {
