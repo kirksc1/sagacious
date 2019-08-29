@@ -29,7 +29,8 @@ CREATE TABLE participant (
     fail_completed BOOLEAN, 
     order_index INTEGER NOT NULL, 
     saga_id VARCHAR(255) NOT NULL, 
-    PRIMARY KEY (identifier))
+    PRIMARY KEY (identifier)
+)
 ```
 
 ## Usage

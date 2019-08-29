@@ -23,7 +23,8 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class SagaOrchestratedAspectExceptionIntegrationTest {
+public class SagaParticipantAspectExceptionIntegrationTest {
+
 
     @Autowired
     Orchestrator orchestrator;
@@ -33,16 +34,6 @@ public class SagaOrchestratedAspectExceptionIntegrationTest {
 
     @org.springframework.boot.test.context.TestConfiguration
     static class TestConfiguration {
-
-        @Bean
-        public CompensatingActionDefinitionFactory<String> testFactory() {
-            return new CompensatingActionDefinitionFactory<String>() {
-                @Override
-                public CompensatingActionDefinition buildDefinition(String item) {
-                    return new CompensatingActionDefinition();
-                }
-            };
-        }
 
         @Bean
         public RestTemplate restTemplate() {
@@ -62,6 +53,134 @@ public class SagaOrchestratedAspectExceptionIntegrationTest {
         @Bean
         public TestSagaManager sagaManager() {
             return new TestSagaManager();
+        }
+
+        @Bean
+        public CompensatingActionDefinitionFactory<String> testFactory() {
+            return new CompensatingActionDefinitionFactory<String>() {
+                @Override
+                public CompensatingActionDefinition buildDefinition(String item) {
+                    return new CompensatingActionDefinition();
+                }
+            };
+        }
+
+    }
+
+    @AllArgsConstructor
+    static class Orchestrator {
+
+        private Participant participant;
+
+        @SagaOrchestrated
+        public void orchestrateFailForIOException() {
+            try {
+                participant.participateWithFailForIOException();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
+
+        @SagaOrchestrated
+        public void orchestrateFailForClassNameIOException() {
+            try {
+                participant.participateWithFailForClassNameIOException();
+            } catch (IOException e) {
+                //ignore
+            }
+        }
+
+        @SagaOrchestrated
+        public void orchestrateNoFailForIllegalArgumentException() {
+            try {
+                participant.participateWithNoFailForIllegalArgumentException();
+            } catch (IllegalArgumentException e) {
+                //ignore
+            }
+        }
+
+        @SagaOrchestrated
+        public void orchestrateNoFailForClassNameIllegalArgumentException() {
+            try {
+                participant.participateWithNoFailForClassNameIllegalArgumentException();
+            } catch (IllegalArgumentException e) {
+                //ignore
+            }
+        }
+
+        @SagaOrchestrated
+        public void orchestrateNoFailForCloserMatchToIllegalArgumentException() {
+            try {
+            participant.participateWithNoFailForCloserMatchToIllegalArgumentException();
+            } catch (IllegalArgumentException e) {
+                //ignore
+            }
+        }
+
+        @SagaOrchestrated
+        public void orchestrateFailForCloserMatchToIllegalArgumentException() {
+            try {
+            participant.participateWithFailForCloserMatchToIllegalArgumentException();
+            } catch (IllegalArgumentException e) {
+                //ignore
+            }
+        }
+
+    }
+
+    static class Participant {
+        @SagaParticipant(actionDefinitionFactory = "testFactory", failFor = IOException.class)
+        public String participateWithFailForIOException() throws IOException {
+            throw new IOException();
+        }
+
+        @SagaParticipant(actionDefinitionFactory = "testFactory", failForClassName = "IOException")
+        public String participateWithFailForClassNameIOException() throws IOException {
+            throw new IOException();
+        }
+
+        @SagaParticipant(actionDefinitionFactory = "testFactory", noFailFor = IllegalArgumentException.class)
+        public String participateWithNoFailForIllegalArgumentException() {
+            throw new IllegalArgumentException();
+        }
+
+        @SagaParticipant(actionDefinitionFactory = "testFactory", noFailForClassName = "IllegalArgumentException")
+        public String participateWithNoFailForClassNameIllegalArgumentException() {
+            throw new IllegalArgumentException();
+        }
+
+        @SagaParticipant(actionDefinitionFactory = "testFactory", failFor = RuntimeException.class, noFailFor = IllegalArgumentException.class)
+        public void participateWithNoFailForCloserMatchToIllegalArgumentException() {
+            throw new IllegalArgumentException();
+        }
+
+        @SagaParticipant(actionDefinitionFactory = "testFactory", noFailFor = RuntimeException.class, failFor = IllegalArgumentException.class)
+        public void participateWithFailForCloserMatchToIllegalArgumentException() {
+            throw new IllegalArgumentException();
+        }
+
+        @SagaParticipant(actionDefinitionFactory = "testFactory",autoFail = false)
+        public void participateWithNoAutoFailIllegalArgumentException() {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    static class User {
+
+    }
+
+    @Getter
+    static class TestIdentifierFactory implements IdentifierFactory {
+        private boolean buildCalled = false;
+
+        @Override
+        public String buildIdentifier() {
+            buildCalled = true;
+            return "";
+        }
+
+        public void reset() {
+            buildCalled = false;
         }
     }
 
@@ -119,63 +238,10 @@ public class SagaOrchestratedAspectExceptionIntegrationTest {
         sagaManager.reset();
     }
 
-    @AllArgsConstructor
-    static class Orchestrator {
-
-        private Participant participant;
-
-        @SagaOrchestrated(failFor = IOException.class)
-        public void orchestrateFailForIOException() throws IOException {
-            participant.participateWithIOException();
-        }
-
-        @SagaOrchestrated(failForClassName = "IOException")
-        public void orchestrateFailForClassNameIOException() throws IOException {
-            participant.participateWithIOException();
-        }
-
-        @SagaOrchestrated(noFailFor = IllegalArgumentException.class)
-        public void orchestrateNoFailForIllegalArgumentException() {
-            participant.participateWithIllegalArgumentException();
-        }
-
-        @SagaOrchestrated(noFailForClassName = "IllegalArgumentException")
-        public void orchestrateNoFailForClassNameIllegalArgumentException() {
-            participant.participateWithIllegalArgumentException();
-        }
-
-        @SagaOrchestrated(failFor = RuntimeException.class, noFailFor = IllegalArgumentException.class)
-        public void orchestrateNoFailForCloserMatchToIllegalArgumentException() {
-            participant.participateWithIllegalArgumentException();
-        }
-
-        @SagaOrchestrated(noFailFor = RuntimeException.class, failFor = IllegalArgumentException.class)
-        public void orchestrateFailForCloserMatchToIllegalArgumentException() {
-            participant.participateWithIllegalArgumentException();
-        }
-
-    }
-
-    static class Participant {
-        @SagaParticipant(actionDefinitionFactory = "testFactory", autoFail = false)
-        public String participateWithIOException()throws IOException {
-            throw new IOException();
-        }
-
-        @SagaParticipant(actionDefinitionFactory = "testFactory", autoFail = false)
-        public String participateWithIllegalArgumentException() {
-            throw new IllegalArgumentException();
-        }
-    }
-
     @Test
     @Transactional
     public void testFailForIOException() {
-        try {
-            orchestrator.orchestrateFailForIOException();
-        } catch (IOException e) {
-            //expected
-        }
+        orchestrator.orchestrateFailForIOException();
 
         assertEquals(true, sagaManager.createCalled);
         assertEquals(true, sagaManager.failSagaCalled);
@@ -184,11 +250,7 @@ public class SagaOrchestratedAspectExceptionIntegrationTest {
     @Test
     @Transactional
     public void testOrchestrateFailForClassNameIOException() {
-        try {
-            orchestrator.orchestrateFailForClassNameIOException();
-        } catch (IOException e) {
-            //expected
-        }
+        orchestrator.orchestrateFailForClassNameIOException();
 
         assertEquals(true, sagaManager.createCalled);
         assertEquals(true, sagaManager.failSagaCalled);
@@ -197,11 +259,7 @@ public class SagaOrchestratedAspectExceptionIntegrationTest {
     @Test
     @Transactional
     public void testNoFailForIllegalArgumentException() {
-        try {
-            orchestrator.orchestrateNoFailForIllegalArgumentException();
-        } catch (IllegalArgumentException e) {
-            //expected
-        }
+        orchestrator.orchestrateNoFailForIllegalArgumentException();
 
         assertEquals(true, sagaManager.createCalled);
         assertEquals(false, sagaManager.failSagaCalled);
@@ -210,11 +268,7 @@ public class SagaOrchestratedAspectExceptionIntegrationTest {
     @Test
     @Transactional
     public void testNoFailForClassNameIllegalArgumentException() {
-        try {
-            orchestrator.orchestrateNoFailForClassNameIllegalArgumentException();
-        } catch (IllegalArgumentException e) {
-            //expected
-        }
+        orchestrator.orchestrateNoFailForClassNameIllegalArgumentException();
 
         assertEquals(true, sagaManager.createCalled);
         assertEquals(false, sagaManager.failSagaCalled);
@@ -245,5 +299,4 @@ public class SagaOrchestratedAspectExceptionIntegrationTest {
         assertEquals(true, sagaManager.createCalled);
         assertEquals(true, sagaManager.failSagaCalled);
     }
-
 }
