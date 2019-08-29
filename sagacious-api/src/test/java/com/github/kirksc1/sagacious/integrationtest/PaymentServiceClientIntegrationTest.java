@@ -1,4 +1,4 @@
-package com.github.kirksc1.sagacious.integrationtest.orderservice.payments;
+package com.github.kirksc1.sagacious.integrationtest;
 
 import com.github.kirksc1.sagacious.integrationapp.orderservice.payments.PaymentServiceClient;
 import com.github.kirksc1.sagacious.integrationapp.paymentservice.PaymentRepository;

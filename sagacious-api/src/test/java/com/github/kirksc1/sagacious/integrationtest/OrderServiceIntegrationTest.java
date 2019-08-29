@@ -1,4 +1,4 @@
-package com.github.kirksc1.sagacious.integrationtest.orderservice;
+package com.github.kirksc1.sagacious.integrationtest;
 
 import com.github.kirksc1.sagacious.integrationapp.orderservice.OrderRepository;
 import com.github.kirksc1.sagacious.integrationapp.orderservice.OrderResource;

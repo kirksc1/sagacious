@@ -5,9 +5,7 @@ import com.github.kirksc1.sagacious.action.CompensatingActionDefinitionFactory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
 public class ShipmentActionDefinitionFactory implements CompensatingActionDefinitionFactory<String> {
 

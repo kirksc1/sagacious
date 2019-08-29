@@ -7,13 +7,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 
-@Service
 @RequiredArgsConstructor
 public class PaymentServiceClient {
 
@@ -24,7 +22,7 @@ public class PaymentServiceClient {
     private Environment environment;
 
     @SagaParticipant(actionDefinitionFactory="paymentActionDefinitionFactory")
-    public String initiatePayment(String paymentDeviceId, Float amount) throws FailedPaymentException {
+    public String initiatePayment(String paymentDeviceId, Float amount) throws Exception {
         Payment payment = new Payment();
         payment.setPaymentDeviceId(paymentDeviceId);
         payment.setAmount(amount);
@@ -38,7 +36,11 @@ public class PaymentServiceClient {
         try {
             return restTemplate.postForEntity(uri, paymentEntity, String.class).getBody();
         } catch (HttpClientErrorException e) {
-            throw new FailedPaymentException(e);
+            throw handle(e);
         }
+    }
+
+    protected Exception handle(HttpClientErrorException e)  {
+        return new FailedPaymentException(e);
     }
 }
