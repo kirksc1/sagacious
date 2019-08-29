@@ -7,6 +7,31 @@ non-invasive manner.  Its primary focus is on simplifying the orchestration styl
 Although usable in any spring-enabled service, its designed for use within Spring Boot
 applications.
 
+## Setup
+Sagacious uses 2 database entities and its default implementation uses JPA.  The entities
+(Saga and Participant) have the following table structures within an RDBMS.
+
+**Saga**
+```sql
+CREATE TABLE saga (
+    identifier VARCHAR(255) NOT NULL, 
+    completed BOOLEAN NOT NULL, 
+    failed BOOLEAN NOT NULL, 
+    PRIMARY KEY (identifier)
+)
+```
+
+**Participant**
+```sql
+CREATE TABLE participant (
+    identifier VARCHAR(255) NOT NULL, 
+    action_definition VARCHAR(4000) NOT NULL, -- or CLOB as needed
+    fail_completed BOOLEAN, 
+    order_index INTEGER NOT NULL, 
+    saga_id VARCHAR(255) NOT NULL, 
+    PRIMARY KEY (identifier))
+```
+
 ## Usage
 ### Saga Initiation
 Establish a saga to which participants can be added on an as needed basis.  Participants registered
