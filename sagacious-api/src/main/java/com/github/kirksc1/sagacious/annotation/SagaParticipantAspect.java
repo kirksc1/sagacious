@@ -5,6 +5,7 @@ import com.github.kirksc1.sagacious.ParticipantIdentifier;
 import com.github.kirksc1.sagacious.action.CompensatingActionDefinitionFactory;
 import com.github.kirksc1.sagacious.context.SagaContext;
 import com.github.kirksc1.sagacious.context.SagaContextHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -15,11 +16,14 @@ import org.springframework.util.Assert;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * SagaParticipantAspect is an aspect that operates around methods annotated with @{@link SagaParticipant} and
  * adds a participant to the current saga.
  */
+@Slf4j
 @Aspect
 public class SagaParticipantAspect implements Ordered {
 
@@ -74,13 +78,87 @@ public class SagaParticipantAspect implements Ordered {
             }
         }
 
-        Object retVal = joinPoint.proceed();
+        Object retVal = null;
+        try {
+            retVal = joinPoint.proceed();
+        } catch (Throwable e) {
+            if (sagaContext != null) {
+                handleThrowable(joinPoint, sagaContext, e);
+            }
+            throw e;
+        }
 
         if (!participantAdded && sagaContext != null) {
             addParticipant(sagaContext, method, retVal);
         }
 
         return retVal;
+    }
+
+    /**
+     * Process a Throwable for the participant when operating within a saga.
+     * @param joinPoint The ProceedingJoinPoint for the method call.
+     * @param sagaContext The current SagaContext.
+     * @param e An exception that occurred during execution.
+     */
+    private void handleThrowable(ProceedingJoinPoint joinPoint, SagaContext sagaContext, Throwable e) {
+        SagaParticipant sagaParticipant = findSagaParticipant(joinPoint);
+        if (sagaParticipant != null) {
+            if (sagaParticipant.autoFail() && buildExceptionManager(sagaParticipant).failOn(e)) {
+                sagaContext.getSagaManager().failSaga(sagaContext.getIdentifier());
+                log.debug("Saga {} failed", sagaContext.getIdentifier());
+            }
+        } else {
+            throw new IllegalStateException("The SagaParticipant could not be located");
+        }
+    }
+
+    /**
+     * Find the SagaParticipant annotation from the provided ProceedingJoinPoint.
+     * @param joinPoint The ProceedingJoinPoint for a method invocation.
+     * @return The SagaParticipant annotation if found, otherwise null.
+     */
+    private SagaParticipant findSagaParticipant(ProceedingJoinPoint joinPoint) {
+        SagaParticipant retVal = null;
+
+        if (joinPoint.getSignature() instanceof MethodSignature) {
+            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+            Method method = signature.getMethod();
+            retVal = method.getAnnotation(SagaParticipant.class);
+        }
+
+        return retVal;
+    }
+
+    /**
+     * Build an ExceptionManager.
+     * @param annotation The SagaParticipant annotation.
+     * @return A RuleBasedExceptionManager if rules are provided, otherwise a DefaultExceptionManager.
+     */
+    private ExceptionManager buildExceptionManager(SagaParticipant annotation) {
+        ExceptionManager exceptionManager = new DefaultExceptionManager();
+
+        List<ExceptionRule> rules = new ArrayList<>();
+
+        for (Class<?> cls : annotation.failFor()) {
+            rules.add(new ExceptionRule(cls, true));
+        }
+        for (String clsName : annotation.failForClassName()) {
+            rules.add(new ExceptionRule(clsName, true));
+        }
+
+        for (Class<?> cls : annotation.noFailFor()) {
+            rules.add(new ExceptionRule(cls, false));
+        }
+        for (String clsName : annotation.noFailForClassName()) {
+            rules.add(new ExceptionRule(clsName, false));
+        }
+
+        if (!rules.isEmpty()) {
+            exceptionManager = new RuleBasedExceptionManager(rules);
+        }
+
+        return exceptionManager;
     }
 
     /**
