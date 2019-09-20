@@ -1,8 +1,8 @@
 package com.github.kirksc1.sagacious.action.web;
 
+import com.github.kirksc1.sagacious.Attribute;
 import com.github.kirksc1.sagacious.CompensatingActionDefinition;
 import com.github.kirksc1.sagacious.Header;
-import com.github.kirksc1.sagacious.action.web.RestTemplateExecutor;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.*;
@@ -60,6 +61,13 @@ public class RestTemplateExecutorIntegrationTest {
             this.header = header;
         }
 
+        @RequestMapping(path = "/override", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+        public void put(@RequestBody String body, @RequestHeader("test-header") String header) {
+            called = true;
+            this.body = body;
+            this.header = header;
+        }
+
         public boolean isCalled() {
             return called;
         }
@@ -82,8 +90,26 @@ public class RestTemplateExecutorIntegrationTest {
     public void testActionSent() {
         CompensatingActionDefinition definition = new CompensatingActionDefinition();
         definition.setUri("http://localhost:" + port + "/test");
-        definition.setMethod("POST");
         definition.setBody("test-body");
+
+        definition.getHeaders().add(new Header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
+        definition.getHeaders().add(new Header("test-header", "test-value"));
+
+        boolean execSuccess = executor.execute(definition);
+
+        assertEquals(true, execSuccess);
+        assertEquals(true, testController.isCalled());
+        assertEquals("test-value", testController.getHeader());
+        assertEquals("test-body", testController.getBody());
+    }
+
+    @Test
+    public void testActionSentWithOverrideMethod() {
+        CompensatingActionDefinition definition = new CompensatingActionDefinition();
+        definition.setUri("http://localhost:" + port + "/override");
+        definition.setBody("test-body");
+
+        definition.getAttributes().add(new Attribute(RestTemplateExecutor.ATTRIBUTE_HTTP_METHOD, HttpMethod.PUT.name()));
 
         definition.getHeaders().add(new Header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
         definition.getHeaders().add(new Header("test-header", "test-value"));
@@ -100,7 +126,6 @@ public class RestTemplateExecutorIntegrationTest {
     public void testSendException() {
         CompensatingActionDefinition definition = new CompensatingActionDefinition();
         definition.setUri("http://localhost/fail");
-        definition.setMethod("POST");
         definition.setBody("test-body");
 
         definition.getHeaders().add(new Header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));

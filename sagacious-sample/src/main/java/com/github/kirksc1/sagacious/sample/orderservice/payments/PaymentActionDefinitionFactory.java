@@ -17,7 +17,6 @@ public class PaymentActionDefinitionFactory implements CompensatingActionDefinit
     @Override
     public CompensatingActionDefinition buildDefinition(String guid) {
         CompensatingActionDefinition retVal = new CompensatingActionDefinition();
-        retVal.setMethod("DELETE");
         retVal.setUri("http://localhost:" + environment.getProperty("local.server.port") + "/payment-service/payments/" + guid);
         return retVal;
     }

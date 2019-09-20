@@ -19,14 +19,6 @@ public class CompensatingActionDefinitionTest {
     }
 
     @Test
-    public void testSetMethod_whenMethodSet_thenMethodGettable() {
-        CompensatingActionDefinition definition = new CompensatingActionDefinition();
-        definition.setMethod("method");
-
-        assertEquals("method", definition.getMethod());
-    }
-
-    @Test
     public void testSetBody_whenBodySet_thenBodyGettable() {
         CompensatingActionDefinition definition = new CompensatingActionDefinition();
         definition.setBody("body");

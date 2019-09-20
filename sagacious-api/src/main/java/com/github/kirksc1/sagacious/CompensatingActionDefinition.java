@@ -1,8 +1,6 @@
 package com.github.kirksc1.sagacious;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +15,6 @@ public class CompensatingActionDefinition {
     private List<Header> headers = new ArrayList<>();
     private String body;
     private String uri;
-    private String method;
 
     /**
      * Retrieve the attributes for the action definition.
@@ -83,19 +80,4 @@ public class CompensatingActionDefinition {
         this.uri = uri;
     }
 
-    /**
-     * Retrieve the method for the action definition.
-     * @return The method for the action definition.
-     */
-    public String getMethod() {
-        return method;
-    }
-
-    /**
-     * Set the method for the action definition.
-     * @param method The method for the action definition.
-     */
-    public void setMethod(String method) {
-        this.method = method;
-    }
 }
