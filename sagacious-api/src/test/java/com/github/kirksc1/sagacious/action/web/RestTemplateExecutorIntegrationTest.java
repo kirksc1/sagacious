@@ -79,7 +79,7 @@ public class RestTemplateExecutorIntegrationTest {
     }
 
     @Test
-    public void test() {
+    public void testActionSent() {
         CompensatingActionDefinition definition = new CompensatingActionDefinition();
         definition.setUri("http://localhost:" + port + "/test");
         definition.setMethod("POST");
@@ -97,7 +97,7 @@ public class RestTemplateExecutorIntegrationTest {
     }
 
     @Test
-    public void testException() {
+    public void testSendException() {
         CompensatingActionDefinition definition = new CompensatingActionDefinition();
         definition.setUri("http://localhost/fail");
         definition.setMethod("POST");
