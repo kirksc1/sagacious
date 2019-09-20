@@ -2,18 +2,19 @@ package com.github.kirksc1.sagacious;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kirksc1.sagacious.action.*;
+import com.github.kirksc1.sagacious.action.web.RestTemplateExecutor;
 import com.github.kirksc1.sagacious.annotation.IdentifierFactory;
 import com.github.kirksc1.sagacious.annotation.SagaOrchestratedAspect;
 import com.github.kirksc1.sagacious.annotation.SagaParticipantAspect;
-import com.github.kirksc1.sagacious.action.web.RestTemplateExecutor;
-import com.github.kirksc1.sagacious.repository.Saga;
-import com.github.kirksc1.sagacious.action.SynchronousParticipantOrderStrategy;
 import com.github.kirksc1.sagacious.annotation.UuidFactory;
+import com.github.kirksc1.sagacious.repository.Saga;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,6 +25,8 @@ import java.util.List;
  * deliver the Sagacious feature set.
  */
 @Configuration
+@EntityScan( basePackageClasses = {Saga.class} )
+@EnableJpaRepositories({"com.github.kirksc1.sagacious"})
 public class SagaciousAutoConfiguration {
 
     @Bean

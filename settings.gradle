@@ -1,4 +1,5 @@
 rootProject.name = 'sagacious'
 include 'sagacious-api'
 include 'sagacious-sample'
+include 'sagacious-jms'
 

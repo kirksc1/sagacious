@@ -98,3 +98,7 @@ public class RestTemplateExecutor implements CompensatingActionExecutor {
 
 CompensatingActionExecutor beans are checked in order (according to Spring's Ordered).  The first
 bean that can execute the definition is passed the definition for execution.
+
+Sagacious supports the following executors:
+ - [RestTemplateExecutor](docs/resttemplateexecutor.md) (sagacious-api) - communicates actions over HTTP
+ - [JmsTemplateExecutor](docs/jmstemplateexecutor.md) (sagacious-jms) - communicates actions over JMS
