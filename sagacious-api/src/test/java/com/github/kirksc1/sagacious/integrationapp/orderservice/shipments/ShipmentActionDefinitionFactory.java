@@ -15,7 +15,6 @@ public class ShipmentActionDefinitionFactory implements CompensatingActionDefini
     @Override
     public CompensatingActionDefinition buildDefinition(String guid) {
         CompensatingActionDefinition retVal = new CompensatingActionDefinition();
-        retVal.setMethod("DELETE");
         retVal.setUri("http://localhost:" + environment.getProperty("local.server.port") + "/shipping-service/shipments/" + guid);
         return retVal;
     }

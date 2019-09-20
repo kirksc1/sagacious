@@ -1,5 +1,6 @@
 package com.github.kirksc1.sagacious.action.web;
 
+import com.github.kirksc1.sagacious.Attribute;
 import com.github.kirksc1.sagacious.CompensatingActionDefinition;
 import com.github.kirksc1.sagacious.action.CompensatingActionExecutor;
 import com.github.kirksc1.sagacious.annotation.Executable;
@@ -22,6 +23,11 @@ import java.util.Optional;
 @Executable(scheme="http")
 @Executable(scheme="https")
 public class RestTemplateExecutor implements CompensatingActionExecutor, Ordered {
+
+    /**
+     * Name of the attribute used to identify the desired HTTP method.
+     */
+    public static final String ATTRIBUTE_HTTP_METHOD = "http.method";
 
     private static final int DEFAULT_ORDER = 0;
 
@@ -57,7 +63,12 @@ public class RestTemplateExecutor implements CompensatingActionExecutor, Ordered
         boolean retVal = false;
 
         URI uri = URI.create(definition.getUri());
-        HttpMethod method = HttpMethod.resolve(definition.getMethod());
+
+        HttpMethod method = Optional.ofNullable(definition.getBody())
+                .map(s -> HttpMethod.POST)
+                .orElse(HttpMethod.DELETE);
+
+        method = findHttpMethod(definition).orElse(method);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         Optional.ofNullable(definition.getHeaders())
@@ -83,5 +94,22 @@ public class RestTemplateExecutor implements CompensatingActionExecutor, Ordered
     @Override
     public int getOrder() {
         return order;
+    }
+
+    /**
+     * Find an HttpMethod, if present, to override the default behavior.  It resolves the
+     * HttpMethod from the attributes.
+     * @param definition The CompensatingActionDefinition.
+     * @return The HttpMethod if found.
+     */
+    protected Optional<HttpMethod> findHttpMethod(CompensatingActionDefinition definition) {
+        HttpMethod retVal = null;
+
+        for (Attribute attribute : definition.getAttributes()) {
+            if (ATTRIBUTE_HTTP_METHOD.equals(attribute.getName())) {
+                retVal = HttpMethod.resolve(attribute.getValue());
+            }
+        }
+        return Optional.ofNullable(retVal);
     }
 }
