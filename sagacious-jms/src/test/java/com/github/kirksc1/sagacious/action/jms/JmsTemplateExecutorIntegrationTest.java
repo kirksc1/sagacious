@@ -64,7 +64,7 @@ public class JmsTemplateExecutorIntegrationTest {
         boolean execSuccess = executor.execute(definition);
         assertTrue(execSuccess);
 
-        receiver.getLatch().await(10000, TimeUnit.MILLISECONDS);
+        receiver.getLatch().await(20000, TimeUnit.MILLISECONDS);
 
         Message<String> message = receiver.getMessage();
         assertEquals("test-body", message.getPayload());
@@ -95,8 +95,8 @@ public class JmsTemplateExecutorIntegrationTest {
 
         @JmsListener(destination = "test")
         public void receive(Message<String> message) throws JMSException {
-            latch.countDown();
             this.message = message;
+            latch.countDown();
         }
 
         public Message<String> getMessage() {
