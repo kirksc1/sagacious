@@ -8,6 +8,7 @@ import com.github.kirksc1.sagacious.annotation.SagaOrchestratedAspect;
 import com.github.kirksc1.sagacious.annotation.SagaParticipantAspect;
 import com.github.kirksc1.sagacious.annotation.UuidFactory;
 import com.github.kirksc1.sagacious.repository.Saga;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -18,7 +19,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * SagaciousAutoConfiguration contains the bean definitions for the autoconfigured beans to
@@ -27,6 +30,7 @@ import java.util.List;
 @Configuration
 @EntityScan( basePackageClasses = {Saga.class} )
 @EnableJpaRepositories({"com.github.kirksc1.sagacious"})
+@Slf4j
 public class SagaciousAutoConfiguration {
 
     @Bean
@@ -66,7 +70,11 @@ public class SagaciousAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public CompensatingActionManager compensatingActionManager(CompensatingActionDefinitionMatcher matcher, List<CompensatingActionExecutor> executors) {
+    public CompensatingActionManager compensatingActionManager(CompensatingActionDefinitionMatcher matcher, Optional<List<CompensatingActionExecutor>> optExecutors) {
+        List<CompensatingActionExecutor> executors = optExecutors.orElse(new ArrayList<>());
+        if (executors.isEmpty()) {
+            log.warn("No CompensatingActionExecutor beans found");
+        }
         return new CompensatingActionManager(matcher, executors);
     }
 

@@ -74,6 +74,14 @@ public String initiatePayment(String paymentDeviceId, Float amount) throws Faile
 Reference: [PaymentServiceClient.java](sagacious-sample/src/main/java/com/github/kirksc1/sagacious/sample/orderservice/payments/PaymentServiceClient.java)
 
 **NOTE: @SagaParticipant may also be [customized](docs/sagaparticipant-customizations.md).**
+### Saga State
+Sagas have two key statuses that influence its behavior.
+- Completed: Indicates that all known processing is complete on the Saga.  This processing 
+could apply to either successful processing or processing of compensating actions upon a Saga
+failure.
+- Failed: Indicates that a Saga has failed.
+
+The default SagaManager implementation is the [SimpleSagaManager](docs/simplesagamanager.md)
 
 ### Compensating Actions
 Within a saga, each step has a compensating action that, upon saga failure, should effectively 
@@ -102,3 +110,11 @@ bean that can execute the definition is passed the definition for execution.
 Sagacious supports the following executors:
  - [RestTemplateExecutor](docs/resttemplateexecutor.md) (sagacious-api) - communicates actions over HTTP
  - [JmsTemplateExecutor](docs/jmstemplateexecutor.md) (sagacious-jms) - communicates actions over JMS
+ 
+# Sagacious Server Configurations
+Sagacious provides server configurations through the use of the following server
+annotations:
+- [@EnableParticipantServer](docs/enableparticipantserver.md) : Enable limited interactions
+to support remote participants.  The primary use case for this functionality is
+to support applications orchestrating sagas whose participants are orchestrating
+their own sagas, enabling a single saga to cover all participants.

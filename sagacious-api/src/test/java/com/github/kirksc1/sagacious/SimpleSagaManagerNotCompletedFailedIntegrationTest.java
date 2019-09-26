@@ -3,6 +3,7 @@ package com.github.kirksc1.sagacious;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kirksc1.sagacious.action.*;
 import com.github.kirksc1.sagacious.annotation.Executable;
+import com.github.kirksc1.sagacious.repository.Participant;
 import com.github.kirksc1.sagacious.repository.Saga;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
-public class SimpleSagaManagerIntegrationTest {
+public class SimpleSagaManagerNotCompletedFailedIntegrationTest {
 
     @Autowired
     SagaManager sagaManager;
@@ -91,52 +92,68 @@ public class SimpleSagaManagerIntegrationTest {
     }
 
     @Test
-    public void testCreateSaga_whenIdentifierProvided_thenSagaCreatedWithNoParticipants() {
-        sagaManager.createSaga(new SagaIdentifier("test"));
+    public void testAddParticipant_whenDetailsProvidedAndSagaFailedNotCompleted_thenParticipantAdded() {
+        CompensatingActionDefinition definition = new CompensatingActionDefinition();
+        boolean retVal = sagaManager.addParticipant(new SagaIdentifier("failed-notcompleted"), new ParticipantIdentifier("test"), definition);
 
-        Optional<Saga> sagaOpt = sagaRepository.findById("test");
+        assertEquals(false, retVal);
+
+        Optional<Saga> sagaOpt = sagaRepository.findById("failed-notcompleted");
 
         assertTrue(sagaOpt.isPresent());
 
         Saga saga = sagaOpt.get();
-        assertEquals("test", saga.getIdentifier());
-        assertEquals(Boolean.FALSE, saga.isFailed());
-        assertEquals(Boolean.FALSE, saga.isCompleted());
-        assertEquals(true, saga.getParticipants().isEmpty());
+        assertEquals(2, saga.getParticipants().size());
+
+        Participant participant = saga.getParticipants().get(1);
+        assertEquals("test", participant.getIdentifier());
+        assertEquals(false, participant.getFailCompleted());
     }
 
     @Test
-    public void testEndToEnd_whenSagaCreatedWithParticipantsAndIsFailedAndWithFailingActionThatIsRetried_thenSagaFailureIsCompleted() {
-        SagaIdentifier sagaIdentifier = new SagaIdentifier("test");
-        sagaManager.createSaga(sagaIdentifier);
+    public void testAddParticipant_whenDetailsProvidedAndSagaFailedNotCompleted_thenActionExecuted() {
+        CompensatingActionDefinition definition = new CompensatingActionDefinition();
+        boolean retVal = sagaManager.addParticipant(new SagaIdentifier("failed-notcompleted"), new ParticipantIdentifier("test"), definition);
 
-        boolean add1 = sagaManager.addParticipant(sagaIdentifier, new ParticipantIdentifier("test-1"), new CompensatingActionDefinition());
-        boolean add2 = sagaManager.addParticipant(sagaIdentifier, new ParticipantIdentifier("test-2"), new CompensatingActionDefinition());
+        assertEquals(2, executor.getCalledCount());
+    }
 
-        assertEquals(true, add1);
-        assertEquals(true, add2);
+    @Test
+    public void testFailSaga_whenFailedSaga_thenCompleteCompensatingActions() {
+        SagaIdentifier sagaIdentifier = new SagaIdentifier("failed-notcompleted");
+        boolean retVal = sagaManager.failSaga(sagaIdentifier);
 
-        sagaManager.failSaga(sagaIdentifier);
-
-        Optional<Saga> sagaOpt = sagaRepository.findById("test");
+        assertEquals(true, retVal);
+        Optional<Saga> sagaOpt = sagaRepository.findById("failed-notcompleted");
         Saga saga = sagaOpt.get();
-
-        assertEquals(Boolean.TRUE, saga.isFailed());
-        assertEquals(Boolean.FALSE, saga.isCompleted());
-
-        assertEquals(Boolean.TRUE, saga.getParticipants().get(0).getFailCompleted());
-        assertEquals(Boolean.FALSE, saga.getParticipants().get(1).getFailCompleted());
-
-        sagaManager.failSaga(sagaIdentifier);
-
-        sagaOpt = sagaRepository.findById("test");
-        saga = sagaOpt.get();
 
         assertEquals(Boolean.TRUE, saga.isFailed());
         assertEquals(Boolean.TRUE, saga.isCompleted());
 
-        assertEquals(Boolean.TRUE, saga.getParticipants().get(0).getFailCompleted());
-        assertEquals(Boolean.TRUE, saga.getParticipants().get(1).getFailCompleted());
+        assertEquals(1, executor.calledCount);
+    }
+
+    @Test
+    public void testCompleteSaga_whenFailedSaga_thenSagaStateNotChanged() {
+        SagaIdentifier sagaIdentifier = new SagaIdentifier("failed-notcompleted");
+        boolean retVal = sagaManager.completeSaga(sagaIdentifier);
+
+        assertEquals(false, retVal);
+        Optional<Saga> sagaOpt = sagaRepository.findById("failed-notcompleted");
+        Saga saga = sagaOpt.get();
+
+        assertEquals(Boolean.TRUE, saga.isFailed());
+        assertEquals(Boolean.FALSE, saga.isCompleted());
+    }
+
+    @Test
+    public void testHasSagaFailed_whenSagaFailedNotCompleted_thenReturnTrue() {
+        assertEquals(true, sagaManager.hasSagaFailed(new SagaIdentifier("failed-notcompleted")));
+    }
+
+    @Test
+    public void testHasSagaCompleted_whenSagaFailedNotCompleted_thenReturnFalse() {
+        assertEquals(false, sagaManager.hasSagaCompleted(new SagaIdentifier("failed-notcompleted")));
     }
 
 }

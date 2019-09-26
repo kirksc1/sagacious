@@ -1,15 +1,18 @@
-package com.github.kirksc1.sagacious;
+package com.github.kirksc1.sagacious.server;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.util.Assert;
+
+import javax.validation.constraints.NotNull;
 
 /**
- * A name-value pair to be communicated in the compensating action.
+ * HeaderResource is a simple DTO used as a data structure for returning Header data.
  */
-public class Header {
+public class HeaderResource {
 
+    @NotNull
     private final String name;
+    @NotNull
     private final String value;
 
     /**
@@ -18,10 +21,7 @@ public class Header {
      * @param value The value of the header.
      */
     @JsonCreator
-    public Header(@JsonProperty("name") String name, @JsonProperty("value") String value) {
-        Assert.notNull(name, "The name provided is null");
-        Assert.notNull(value, "The value provided is null");
-
+    public HeaderResource(@JsonProperty("name") String name, @JsonProperty("value") String value) {
         this.name = name;
         this.value = value;
     }
