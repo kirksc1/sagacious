@@ -1,15 +1,18 @@
-package com.github.kirksc1.sagacious;
+package com.github.kirksc1.sagacious.server;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.util.Assert;
+
+import javax.validation.constraints.NotNull;
 
 /**
- * A general purpose name-value pair used to describe the compensating action.
+ * AttributeResource is a simple DTO used as a data structure for returning Attribute data.
  */
-public class Attribute {
+public class AttributeResource {
 
+    @NotNull
     private final String name;
+    @NotNull
     private final String value;
 
     /**
@@ -18,10 +21,7 @@ public class Attribute {
      * @param value The value of the attribute.
      */
     @JsonCreator
-    public Attribute(@JsonProperty("name") String name, @JsonProperty("value")  String value) {
-        Assert.notNull(name, "The name provided is null");
-        Assert.notNull(value, "The value provided is null");
-
+    public AttributeResource(@JsonProperty("name") String name, @JsonProperty("value") String value) {
         this.name = name;
         this.value = value;
     }

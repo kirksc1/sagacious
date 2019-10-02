@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+    id 'jacoco'
+}
+
+dependencies {
+    implementation project(':sagacious-api')
+    implementation("org.springframework.boot:spring-boot-starter-web:2.0.0.RELEASE")//TODO strip down to minimal references
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:2.0.0.RELEASE")//TODO strip down to minimal references
+
+    annotationProcessor("org.projectlombok:lombok:1.18.4")
+    compileOnly("org.projectlombok:lombok:1.18.4")
+
+    testCompile("com.h2database:h2:1.4.199")
+    testCompile("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.4")
+    testCompileOnly("org.projectlombok:lombok:1.18.4")
+
+    testImplementation 'io.rest-assured:rest-assured:3.0.0'
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
+    }
+}
+
+check.dependsOn jacocoTestReport

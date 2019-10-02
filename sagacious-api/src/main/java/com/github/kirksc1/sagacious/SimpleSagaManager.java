@@ -15,7 +15,6 @@ import org.springframework.util.Assert;
  */
 public class SimpleSagaManager implements SagaManager {
 
-    public static final String THE_SAGA_PROVIDED_WAS_NOT_FOUND = "The Saga provided was not found";
     public static final String THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL = "The SagaIdentifier provided is null";
 
     private final CrudRepository<Saga, String> repository;
@@ -63,12 +62,14 @@ public class SimpleSagaManager implements SagaManager {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);
 
         Saga saga = repository.findById(sagaIdentifier.toString())
-                .orElseThrow(() -> new IllegalArgumentException(THE_SAGA_PROVIDED_WAS_NOT_FOUND));
+                .orElseThrow(() -> new SagaNotFoundException(sagaIdentifier));
 
         boolean retVal = false;
 
         if (!saga.isFailed()) {
-            flagSagaForCompleted(sagaIdentifier.toString());
+            if (!saga.isCompleted()) {
+                flagSagaForCompleted(sagaIdentifier.toString());
+            }
             retVal = true;
         }
         return retVal;
@@ -91,22 +92,23 @@ public class SimpleSagaManager implements SagaManager {
         }
 
         return repository.findById(sagaIdentifier.toString()).map(saga -> {
+            Participant participant = new Participant();
+            participant.setIdentifier(participantIdentifier.toString());
+            participant.setActionDefinition(compensatingActionStr);
+            participant.setFailCompleted(false);
+            participant.setOrderIndex(saga.getParticipants().size() + 1);
+
+            saga.getParticipants().add(participant);
+            saga.setCompleted(false);
+
+            repository.save(saga);
+
             if (saga.isFailed()) {
                 compensatingActionStrategy.performCompensatingActions(saga);
             }
 
-            Participant participant = new Participant();
-            participant.setIdentifier(participantIdentifier.toString());
-            participant.setActionDefinition(compensatingActionStr);
-            participant.setFailCompleted(saga.isFailed());
-            participant.setOrderIndex(saga.getParticipants().size() + 1);
-
-            saga.getParticipants().add(participant);
-
-            repository.save(saga);
-
             return !saga.isFailed();
-        }).orElseThrow(() -> new IllegalArgumentException(THE_SAGA_PROVIDED_WAS_NOT_FOUND));
+        }).orElseThrow(() -> new SagaNotFoundException(sagaIdentifier));
     }
 
     /**
@@ -116,7 +118,7 @@ public class SimpleSagaManager implements SagaManager {
     public boolean failSaga(SagaIdentifier sagaIdentifier) {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);
         Saga saga = repository.findById(sagaIdentifier.toString())
-                .orElseThrow(() -> new IllegalArgumentException(THE_SAGA_PROVIDED_WAS_NOT_FOUND));
+                .orElseThrow(() -> new SagaNotFoundException(sagaIdentifier));
 
         boolean retVal = false;
         if (!saga.isCompleted()) {
@@ -126,6 +128,8 @@ public class SimpleSagaManager implements SagaManager {
             compensatingActionStrategy.performCompensatingActions(saga);
 
             flagSagaForFailureCompletedIfAllParticipantsCompleted(sagaIdentifier.toString());
+        } else if (saga.isFailed()) {
+            retVal = true;
         }
         return retVal;
     }
@@ -138,7 +142,7 @@ public class SimpleSagaManager implements SagaManager {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);
 
         return repository.findById(sagaIdentifier.toString()).map(Saga::isFailed)
-                .orElseThrow(() -> new IllegalArgumentException(THE_SAGA_PROVIDED_WAS_NOT_FOUND));
+                .orElseThrow(() -> new SagaNotFoundException(sagaIdentifier));
     }
 
     /**
@@ -149,7 +153,7 @@ public class SimpleSagaManager implements SagaManager {
         Assert.notNull(sagaIdentifier, THE_SAGA_IDENTIFIER_PROVIDED_IS_NULL);
 
         return repository.findById(sagaIdentifier.toString()).map(Saga::isCompleted)
-                .orElseThrow(() -> new IllegalArgumentException(THE_SAGA_PROVIDED_WAS_NOT_FOUND));
+                .orElseThrow(() -> new SagaNotFoundException(sagaIdentifier));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

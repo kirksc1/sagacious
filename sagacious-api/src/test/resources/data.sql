@@ -10,5 +10,11 @@ insert into participant (identifier, saga_id, fail_completed, order_index, actio
 insert into saga (identifier, failed, completed) values ('completed', false, true);
 insert into participant (identifier, saga_id, fail_completed, order_index, action_definition) values ('completed-1', 'completed', false, 1, '{}');
 
-insert into saga (identifier, failed, completed) values ('failed', true, false);
-insert into participant (identifier, saga_id, fail_completed, order_index, action_definition) values ('failed-1', 'failed', false, 1, '{}');
+insert into saga (identifier, failed, completed) values ('completed-2', false, true);
+insert into participant (identifier, saga_id, fail_completed, order_index, action_definition) values ('completed-2-1', 'completed-2', false, 1, '{}');
+
+insert into saga (identifier, failed, completed) values ('failed-notcompleted', true, false);
+insert into participant (identifier, saga_id, fail_completed, order_index, action_definition) values ('failed-notcompleted-1', 'failed-notcompleted', false, 1, '{}');
+
+insert into saga (identifier, failed, completed) values ('failed-completed', true, true);
+insert into participant (identifier, saga_id, fail_completed, order_index, action_definition) values ('failed-completed-1', 'failed-completed', true, 1, '{}');
