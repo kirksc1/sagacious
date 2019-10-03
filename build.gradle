@@ -4,7 +4,7 @@ plugins {
 
 subprojects {
 
-    group 'com.github.kirksc1.sagacious'
+    group 'com.github.kirksc1'
     version '0.0.1-SNAPSHOT'
 
     sourceCompatibility = 1.8
